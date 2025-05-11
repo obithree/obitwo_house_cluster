@@ -1,0 +1,113 @@
+---
+- name: Swapを無効化（Kubernetesの要件）
+  shell: "sudo swapoff -a"
+  args:
+    warn: no
+  tags: setup
+
+- name: Swapを永続的に無効化
+  lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX='
+    line: 'GRUB_CMDLINE_LINUX="cgroup_enable=memory swapaccount=1"'
+  tags: setup
+
+- name: GRUB設定を更新
+  shell: "sudo update-grub"
+  args:
+    warn: no
+  tags: setup
+
+- name: システムパッケージを更新
+  apt:
+    upgrade: dist
+    update_cache: yes
+  tags: install
+
+- name: Kubernetesに必要なパッケージをインストール
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  tags: install
+
+- name: Kubernetes GPGキーを追加
+  shell: |
+    curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/kubernetes-archive-keyring.gpg
+  args:
+    warn: no
+  tags: install
+
+- name: Kubernetesリポジトリを追加
+  lineinfile:
+    path: /etc/apt/sources.list.d/kubernetes.list
+    line: "deb [signed-by=/etc/apt/trusted.gpg.d/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ $(lsb_release -cs) main"
+  tags: install
+
+- name: aptキャッシュを更新
+  apt:
+    update_cache: yes
+  tags: install
+
+- name: Kubernetes関連パッケージをインストール
+  apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+  tags: install
+
+- name: kubeletサービスを有効化
+  service:
+    name: kubelet
+    enabled: yes
+    state: started
+  tags: setup
+
+- name: containerdの設定ファイルを変更（カスタム設定の場合は必要）
+  lineinfile:
+    path: /etc/containerd/config.toml
+    line: |
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+          SystemdCgroup = true
+  tags: configure
+  when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+
+- name: containerdを再起動
+  service:
+    name: containerd
+    state: restarted
+  tags: configure
+
+- name: Kubernetesクラスタを初期化（kubeadmを使用）
+  shell: |
+    kubeadm init \\
+      --pod-network-cidr=192.168.0.0/16 \\
+      --apiserver-advertise-address={{ ansible_default_ipv4.address }} \\
+      --node-name={{ ansible_fqdn }}
+  args:
+    warn: no
+  tags: init
+  register: kubeadm_output
+  changed_when: "'[init] This node has already been initialized' not in kubeadm_output.stderr"
+  ignore_errors: yes
+
+- name: kubeconfigファイルをコピー
+  copy:
+    src: "{{ lookup('ansible.builtin.env', 'HOME') }}/.kube/config"
+    dest: "{{ lookup('ansible.builtin.env', 'HOME') }}/.kube/config"
+    owner: "{{ ansible_user }}"
+    mode: 0600
+  tags: init
+  when: "'[init] This node has already been initialized' not in kubeadm_output.stderr"
+
+- name: kubeadminの初期化出力表示
+  debug:
+    msg: "{{ kubeadm_output.stdout }}"
+  tags: init

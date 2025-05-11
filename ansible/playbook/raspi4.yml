@@ -1,0 +1,11 @@
+---
+- name: Raspberry Pi 4 初期設定
+  hosts: raspberrypi4
+  become: yes
+  vars:
+    hostname: "obitwo-raspi4-1"
+
+    ansible_user: "pi"
+    ansible_become_method: "sudo"
+  roles:
+    - role: common

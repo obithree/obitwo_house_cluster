@@ -1,0 +1,43 @@
+---
+- name: ホスト名を設定
+  hostname:
+    name: "{{ hostname }}"
+  tags: hostname
+
+- name: ロケールを生成
+  locale_gen:
+    name: "{{ locale }}"
+    state: present
+  tags: locale
+
+- name: ロケールを設定
+  locale:
+    locale: "{{ locale }}"
+  tags: locale
+
+- name: タイムゾーンを設定
+  timezone:
+    name: "{{ timezone }}"
+  tags: timezone
+
+- name: キーボードレイアウトを設定 (日本語)
+  lineinfile:
+    path: /etc/default/keyboard
+    regexp: '^XKBLAYOUT='
+    line: 'XKBLAYOUT=jp'
+  tags: keyboard
+
+- name: apt リポジトリ情報を更新
+  apt:
+    update_cache: yes
+  tags: apt
+
+- name: パッケージをアップグレード
+  apt:
+    upgrade: dist
+  tags: apt
+
+- name: システムを再起動 (設定反映用)
+  reboot:
+    reboot_timeout: 300
+  tags: reboot

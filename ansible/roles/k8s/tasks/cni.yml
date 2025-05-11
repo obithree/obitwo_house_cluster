@@ -1,0 +1,30 @@
+---
+- name: Flannel マニフェストをダウンロード
+  get_url:
+    url: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+    dest: /tmp/kube-flannel.yml
+  tags: cni
+
+- name: ネットワーク CIDR を修正（kubeadm で指定された CIDR に合わせる）
+  lineinfile:
+    path: /tmp/kube-flannel.yml
+    regexp: 'networkCIDR: 10.244.0.0/16'
+    line: 'networkCIDR: 192.168.0.0/16'
+  tags: cni
+
+- name: Flannel マニフェストを適用
+  kubernetes_kubectl:
+    src: /tmp/kube-flannel.yml
+    check: yes
+  tags: cni
+
+- name: Flannel ポッドが正常に起動しているか確認
+  kubernetes_kubectl:
+    command: get pods -n kube-system -l app=flannel
+  register: flannel_status
+  tags: cni
+
+- name: Flannel ポッドの状態を出力
+  debug:
+    msg: "{{ flannel_status.stdout }}"
+  tags: cni
