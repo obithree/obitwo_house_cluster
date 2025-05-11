@@ -1,0 +1,5 @@
+apiVersion: v2
+name: samba
+description: A Helm chart for deploying a Samba file server on Kubernetes
+type: application
+version: 0.1.0

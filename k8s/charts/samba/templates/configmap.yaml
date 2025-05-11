@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: samba-config
+data:
+  smb.conf: |
+    [global]
+      workgroup = {{ .Values.samba.workgroup }}
+      server string = {{ .Values.samba.serverString }}
+      security = {{ .Values.samba.security }}
+      guest account = {{ .Values.samba.guestAccount }}
+      map to guest = Bad User
+
+    [{{ .Values.samba.sharedDir }}
+      path = {{ .Values.samba.sharedDir }}
+      read only = no
+      guest ok = yes
+      force user = nobody
+      force group = nobody
+      create mask = 0775
+      directory mask = 0775

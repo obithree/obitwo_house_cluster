@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: samba
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: samba
+  template:
+    metadata:
+      labels:
+        app: samba
+    spec:
+      containers:
+        - name: samba
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 445
+          volumeMounts:
+            - name: samba-volume
+              mountPath: /samba
+            - name: samba-config
+              mountPath: /etc/samba
+          env:
+            - name: SMB_SHARE
+              value: {{ .Values.samba.sharedDir }}
+      volumes:
+        - name: samba-volume
+          hostPath:
+            path: {{ .Values.samba.hostPath }}
+        - name: samba-config
+          configMap:
+            name: samba-config

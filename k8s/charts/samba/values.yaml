@@ -1,0 +1,15 @@
+image:
+  repository: dperson/samba
+  tag: latest
+  pullPolicy: IfNotPresent
+
+samba:
+  workgroup: WORKGROUP
+  serverString: Samba on Kubernetes
+  security: user
+  guestAccount: nobody
+  sharedDir: /samba  # ホストの /data/samba にマウントされる
+  hostPath: /data/samba  # ノード上のホストパス（変数化する対象）
+
+persistence:
+  enabled: false  # hostPath でマウントするため、PVC は不要
