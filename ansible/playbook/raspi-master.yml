@@ -1,0 +1,8 @@
+---
+- name: Raspberry Pi 4 master用初期設定
+  hosts: localhost
+  become: yes
+  vars:
+    test: "raspi01"
+  roles:
+    - role: common

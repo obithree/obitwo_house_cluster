@@ -1,8 +1,8 @@
 ---
-- name: ホスト名を設定
-  hostname:
-    name: "{{ hostname }}"
-  tags: hostname
+# - name: ホスト名を設定
+#   hostname:
+#     name: "{{ hostname }}"
+#   tags: hostname
 
 - name: ロケールを生成
   locale_gen:
@@ -37,7 +37,18 @@
     upgrade: dist
   tags: apt
 
-- name: システムを再起動 (設定反映用)
-  reboot:
-    reboot_timeout: 300
-  tags: reboot
+# - name: Gather system facts
+#   setup:
+
+# - name: Ensure static IP configuration in /etc/network/interfaces
+#   lineinfile:
+#     path: /etc/network/interfaces
+#     line: |
+#       auto eth0
+#       iface eth0 inet static
+#         address {{ ansible_default_ipv4.address }}
+#         netmask {{ ansible_facts.interfaces.eth0.ipv4.netmask }}
+#         gateway {{ ansible_default_gateway }}
+#     regexp: "^auto eth0"
+#     state: present
+#   tags: ip

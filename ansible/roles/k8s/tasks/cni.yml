@@ -8,8 +8,8 @@
 - name: ネットワーク CIDR を修正（kubeadm で指定された CIDR に合わせる）
   lineinfile:
     path: /tmp/kube-flannel.yml
-    regexp: 'networkCIDR: 10.244.0.0/16'
-    line: 'networkCIDR: 192.168.0.0/16'
+    regexp: 'networkCIDR: 10.244.0.0/16'  # ← ここは初期値の固定値を指定
+    line: 'networkCIDR: {{ network_cidr }}'  # ← 変数をここに指定
   tags: cni
 
 - name: Flannel マニフェストを適用

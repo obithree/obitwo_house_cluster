@@ -88,7 +88,7 @@
 - name: Kubernetesクラスタを初期化（kubeadmを使用）
   shell: |
     kubeadm init \\
-      --pod-network-cidr=192.168.0.0/16 \\
+      --pod-network-cidr={{ network_cidr }} \\  # ← ここを変更
       --apiserver-advertise-address={{ ansible_default_ipv4.address }} \\
       --node-name={{ ansible_fqdn }}
   args:

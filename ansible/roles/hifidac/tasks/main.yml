@@ -1,0 +1,4 @@
+- name: Ensure dtoverlay line is present in config.txt
+  lineinfile:
+    path: /boot/firmware/config.txt
+    line: 'dtoverlay=allo-boss-dac-pcm512x-audio'
