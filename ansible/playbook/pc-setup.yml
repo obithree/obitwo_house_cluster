@@ -1,0 +1,9 @@
+---
+- name: Ubuntu PCのセットアップ
+  hosts: pc
+  become: yes
+  roles:
+    - common
+    - role: pc
+      vars:
+        install_dev_tools: true  # 開発ツールをインストールする場合はtrue、不要な場合はfalseまたは削除

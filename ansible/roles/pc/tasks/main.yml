@@ -1,0 +1,153 @@
+---
+- name: システムパッケージを更新
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: yes
+
+- name: 必要な依存パッケージをインストール
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - software-properties-common
+      - wget
+    state: present
+  become: yes
+
+# Google Chrome のインストール
+- name: Google Chrome GPGキーを追加
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.keyring }}"
+    mode: '0644'
+  loop: "{{ apt_keys }}"
+  when: item.name == 'google-chrome'
+  become: yes
+
+- name: Google Chrome リポジトリを追加
+  ansible.builtin.apt_repository:
+    repo: "{{ item.repo }}"
+    filename: "{{ item.filename }}"
+    state: present
+  loop: "{{ apt_repositories }}"
+  when: item.name == 'google-chrome'
+  become: yes
+
+- name: Google Chrome をインストール
+  ansible.builtin.apt:
+    name: google-chrome-stable
+    state: present
+    update_cache: yes
+  become: yes
+
+# VSCode のインストール
+- name: VSCode GPGキーを追加
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.keyring }}"
+    mode: '0644'
+  loop: "{{ apt_keys }}"
+  when: item.name == 'vscode'
+  become: yes
+
+- name: VSCode リポジトリを追加
+  ansible.builtin.apt_repository:
+    repo: "{{ item.repo }}"
+    filename: "{{ item.filename }}"
+    state: present
+  loop: "{{ apt_repositories }}"
+  when: item.name == 'vscode'
+  become: yes
+
+- name: VSCode をインストール
+  ansible.builtin.apt:
+    name: code
+    state: present
+    update_cache: yes
+  become: yes
+
+# Steam のインストール
+- name: 32bit アーキテクチャを有効化 (Steamに必要)
+  ansible.builtin.command: dpkg --add-architecture i386
+  become: yes
+  changed_when: false
+
+- name: パッケージリストを更新
+  ansible.builtin.apt:
+    update_cache: yes
+  become: yes
+
+- name: Steam をインストール
+  ansible.builtin.apt:
+    name: steam-installer
+    state: present
+  become: yes
+
+# Discord のインストール
+- name: Discord の最新版をダウンロード
+  ansible.builtin.get_url:
+    url: https://discord.com/api/download?platform=linux&format=deb
+    dest: /tmp/discord.deb
+    mode: '0644'
+  become: yes
+
+- name: Discord をインストール
+  ansible.builtin.apt:
+    deb: /tmp/discord.deb
+    state: present
+  become: yes
+
+- name: Discord インストーラーを削除
+  ansible.builtin.file:
+    path: /tmp/discord.deb
+    state: absent
+  become: yes
+
+# NVIDIA ドライバーのインストール
+- name: ubuntu-drivers-common をインストール
+  ansible.builtin.apt:
+    name: ubuntu-drivers-common
+    state: present
+  become: yes
+
+- name: NVIDIA GPU の検出
+  ansible.builtin.command: ubuntu-drivers devices
+  register: nvidia_devices
+  become: yes
+  changed_when: false
+  failed_when: false
+
+- name: NVIDIA GPU が検出されたか確認
+  ansible.builtin.debug:
+    msg: "{{ nvidia_devices.stdout }}"
+  when: nvidia_devices.stdout != ""
+
+- name: 推奨される NVIDIA ドライバーを自動インストール
+  ansible.builtin.command: ubuntu-drivers autoinstall
+  become: yes
+  when: "'nvidia' in nvidia_devices.stdout.lower()"
+  register: nvidia_install
+  changed_when: "'Setting up' in nvidia_install.stdout"
+
+- name: NVIDIA ドライバーのインストール状態を確認
+  ansible.builtin.debug:
+    msg: "NVIDIA ドライバーがインストールされました。システムを再起動してください。"
+  when: "'nvidia' in nvidia_devices.stdout.lower()"
+
+- name: NVIDIA GPU が見つからない場合の通知
+  ansible.builtin.debug:
+    msg: "NVIDIA GPUが検出されませんでした。ドライバーのインストールをスキップします。"
+  when: "'nvidia' not in nvidia_devices.stdout.lower()"
+
+# 開発ツールのインストール
+- name: 開発ツールのインストール
+  ansible.builtin.include_tasks: dev-tools.yml
+  when: install_dev_tools | default(false)
+
+- name: インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: "すべてのソフトウェアのインストールが完了しました: Google Chrome, Steam, Discord, VSCode, NVIDIA Driver"
+

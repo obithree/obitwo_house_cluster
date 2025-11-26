@@ -1,0 +1,46 @@
+---
+# デフォルト変数
+software_packages:
+  - google-chrome
+  - steam
+  - discord
+  - vscode
+  - nvidia-driver
+
+# NVIDIAドライバーの設定
+install_nvidia_driver: true  # NVIDIAドライバーをインストールする場合はtrue
+
+# 開発ツールの設定
+install_dev_tools: false  # 開発ツール（CLI Tools, Docker, Docker Compose）をインストールする場合はtrue
+
+# 便利なCLIツール（dev-tools.ymlで使用）
+cli_tools:
+  - vim
+  - git
+  - htop
+  - tmux
+  - build-essential
+  - net-tools
+  - tree
+  - jq
+  - unzip
+  - zip
+  - ncdu
+  - rsync
+
+# APTリポジトリの設定
+apt_keys:
+  - name: google-chrome
+    url: https://dl.google.com/linux/linux_signing_key.pub
+    keyring: /usr/share/keyrings/google-chrome-keyring.gpg
+  - name: vscode
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    keyring: /usr/share/keyrings/microsoft-keyring.gpg
+
+apt_repositories:
+  - name: google-chrome
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main"
+    filename: google-chrome
+  - name: vscode
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-keyring.gpg] https://packages.microsoft.com/repos/code stable main"
+    filename: vscode

@@ -1,0 +1,110 @@
+---
+# 開発ツールのインストール
+
+# 便利なCLIツールのインストール
+- name: 便利なCLIツールをインストール
+  ansible.builtin.apt:
+    name:
+      - vim
+      - git
+      - htop
+      - tmux
+      - build-essential
+      - net-tools
+      - tree
+      - jq
+      - unzip
+      - zip
+      - ncdu
+      - rsync
+    state: present
+  become: yes
+
+# Docker のインストール
+- name: Docker の古いバージョンを削除
+  ansible.builtin.apt:
+    name:
+      - docker
+      - docker-engine
+      - docker.io
+      - containerd
+      - runc
+    state: absent
+  become: yes
+
+- name: Docker GPGキーを追加
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /usr/share/keyrings/docker-archive-keyring.asc
+    mode: '0644'
+  become: yes
+
+- name: システムアーキテクチャを取得
+  ansible.builtin.command: dpkg --print-architecture
+  register: system_arch
+  changed_when: false
+
+- name: Ubuntu コードネームを取得
+  ansible.builtin.command: lsb_release -cs
+  register: ubuntu_codename
+  changed_when: false
+
+- name: Docker リポジトリを追加
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ system_arch.stdout }} signed-by=/usr/share/keyrings/docker-archive-keyring.asc] https://download.docker.com/linux/ubuntu {{ ubuntu_codename.stdout }} stable"
+    filename: docker
+    state: present
+  become: yes
+
+- name: Docker パッケージをインストール
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Docker サービスを起動・有効化
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+- name: 現在のユーザーをdockerグループに追加
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+  become: yes
+
+- name: Docker Compose (standalone) の最新版をダウンロード
+  ansible.builtin.get_url:
+    url: https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+  become: yes
+
+- name: Docker のインストール確認
+  ansible.builtin.command: docker --version
+  register: docker_version
+  changed_when: false
+
+- name: Docker Compose のインストール確認
+  ansible.builtin.command: docker-compose --version
+  register: docker_compose_version
+  changed_when: false
+
+- name: Docker バージョン情報を表示
+  ansible.builtin.debug:
+    msg:
+      - "{{ docker_version.stdout }}"
+      - "{{ docker_compose_version.stdout }}"
+
+- name: 開発ツールのインストール完了メッセージ
+  ansible.builtin.debug:
+    msg: "開発ツールのインストールが完了しました: CLI Tools, Docker, Docker Compose"
