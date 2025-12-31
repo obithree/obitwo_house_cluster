@@ -5,18 +5,18 @@
 #   tags: hostname
 
 - name: ロケールを生成
-  locale_gen:
+  community.general.locale_gen:
     name: "{{ locale }}"
     state: present
   tags: locale
 
 - name: ロケールを設定
-  locale:
+  community.general.locale:
     locale: "{{ locale }}"
   tags: locale
 
 - name: タイムゾーンを設定
-  timezone:
+  community.general.timezone:
     name: "{{ timezone }}"
   tags: timezone
 
