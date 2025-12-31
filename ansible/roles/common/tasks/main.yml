@@ -37,6 +37,89 @@
     upgrade: dist
   tags: apt
 
+# SSH設定
+- name: OpenSSH サーバーをインストール
+  apt:
+    name: openssh-server
+    state: present
+  tags: ssh
+
+- name: SSH サービスを有効化・起動
+  systemd:
+    name: ssh
+    enabled: yes
+    state: started
+  tags: ssh
+
+- name: SSH 設定 - パスワード認証を無効化
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    state: present
+  notify: restart ssh
+  tags: ssh
+
+- name: SSH 設定 - 公開鍵認証を有効化
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PubkeyAuthentication'
+    line: 'PubkeyAuthentication yes'
+    state: present
+  notify: restart ssh
+  tags: ssh
+
+- name: SSH 設定 - root ログインを禁止
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+    state: present
+  notify: restart ssh
+  tags: ssh
+
+- name: SSH 設定 - チャレンジレスポンス認証を無効化
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?ChallengeResponseAuthentication'
+    line: 'ChallengeResponseAuthentication no'
+    state: present
+  notify: restart ssh
+  tags: ssh
+
+- name: SSH 設定 - KbdInteractiveAuthentication を無効化 (新しいOpenSSH)
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?KbdInteractiveAuthentication'
+    line: 'KbdInteractiveAuthentication no'
+    state: present
+  notify: restart ssh
+  tags: ssh
+
+- name: .ssh ディレクトリの存在確認
+  file:
+    path: "{{ ansible_env.HOME }}/.ssh"
+    state: directory
+    mode: '0700'
+    owner: "{{ ansible_env.USER }}"
+    group: "{{ ansible_env.USER }}"
+  become: yes
+  become_user: "{{ ansible_env.USER }}"
+  tags: ssh
+
+- name: authorized_keys ファイルの存在確認
+  file:
+    path: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
+    state: touch
+    mode: '0600'
+    owner: "{{ ansible_env.USER }}"
+    group: "{{ ansible_env.USER }}"
+    modification_time: preserve
+    access_time: preserve
+  become: yes
+  become_user: "{{ ansible_env.USER }}"
+  tags: ssh
+
 # - name: Gather system facts
 #   setup:
 
