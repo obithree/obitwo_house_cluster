@@ -98,26 +98,26 @@
 
 - name: .ssh ディレクトリの存在確認
   file:
-    path: "{{ ansible_env.HOME }}/.ssh"
+    path: "/home/{{ default_user }}/.ssh"
     state: directory
     mode: '0700'
-    owner: "{{ ansible_env.USER }}"
-    group: "{{ ansible_env.USER }}"
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
   become: yes
-  become_user: "{{ ansible_env.USER }}"
+  become_user: "{{ default_user }}"
   tags: ssh
 
 - name: authorized_keys ファイルの存在確認
   file:
-    path: "{{ ansible_env.HOME }}/.ssh/authorized_keys"
+    path: "/home/{{ default_user }}/.ssh/authorized_keys"
     state: touch
     mode: '0600'
-    owner: "{{ ansible_env.USER }}"
-    group: "{{ ansible_env.USER }}"
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
     modification_time: preserve
     access_time: preserve
   become: yes
-  become_user: "{{ ansible_env.USER }}"
+  become_user: "{{ default_user }}"
   tags: ssh
 
 # - name: Gather system facts

@@ -1,5 +1,7 @@
 ---
 # デフォルト変数
+default_user: "obitwo"
+
 software_packages:
   - google-chrome
   - steam

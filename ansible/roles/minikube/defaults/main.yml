@@ -1,5 +1,6 @@
 ---
 # Minikube のデフォルト設定
+default_user: "obitwo"
 
 # Minikubeのバージョン
 minikube_version: "latest"

@@ -77,7 +77,7 @@
 
 - name: 現在のユーザーをdockerグループに追加
   ansible.builtin.user:
-    name: "{{ ansible_user }}"
+    name: "{{ default_user }}"
     groups: docker
     append: yes
   become: yes
@@ -132,30 +132,30 @@
 
 - name: pyenv がインストール済みかチェック
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.pyenv"
+    path: "/home/{{ default_user }}/.pyenv"
   register: pyenv_installed
 
 - name: pyenv をインストール
   ansible.builtin.git:
     repo: https://github.com/pyenv/pyenv.git
-    dest: "{{ ansible_env.HOME }}/.pyenv"
+    dest: "/home/{{ default_user }}/.pyenv"
     version: master
   become: yes
-  become_user: "{{ ansible_env.USER }}"
+  become_user: "{{ default_user }}"
   when: not pyenv_installed.stat.exists
 
 - name: pyenv-virtualenv をインストール
   ansible.builtin.git:
     repo: https://github.com/pyenv/pyenv-virtualenv.git
-    dest: "{{ ansible_env.HOME }}/.pyenv/plugins/pyenv-virtualenv"
+    dest: "/home/{{ default_user }}/.pyenv/plugins/pyenv-virtualenv"
     version: master
   become: yes
-  become_user: "{{ ansible_env.USER }}"
+  become_user: "{{ default_user }}"
   when: not pyenv_installed.stat.exists
 
 - name: .bashrc に pyenv 設定を追加
   ansible.builtin.blockinfile:
-    path: "{{ ansible_env.HOME }}/.bashrc"
+    path: "/home/{{ default_user }}/.bashrc"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - pyenv"
     block: |
       export PYENV_ROOT="$HOME/.pyenv"
@@ -165,11 +165,11 @@
       eval "$(pyenv virtualenv-init -)"
     create: yes
   become: yes
-  become_user: "{{ ansible_env.USER }}"
+  become_user: "{{ default_user }}"
 
 - name: .profile に pyenv 設定を追加
   ansible.builtin.blockinfile:
-    path: "{{ ansible_env.HOME }}/.profile"
+    path: "/home/{{ default_user }}/.profile"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - pyenv"
     block: |
       export PYENV_ROOT="$HOME/.pyenv"
@@ -177,7 +177,7 @@
       eval "$(pyenv init --path)"
     create: yes
   become: yes
-  become_user: "{{ ansible_env.USER }}"
+  become_user: "{{ default_user }}"
 
 - name: 開発ツールのインストール完了メッセージ
   ansible.builtin.debug:

@@ -100,9 +100,9 @@
 
 - name: kubeconfigファイルをコピー
   copy:
-    src: "{{ lookup('ansible.builtin.env', 'HOME') }}/.kube/config"
-    dest: "{{ lookup('ansible.builtin.env', 'HOME') }}/.kube/config"
-    owner: "{{ ansible_user }}"
+    src: "/home/{{ default_user }}/.kube/config"
+    dest: "/home/{{ default_user }}/.kube/config"
+    owner: "{{ default_user }}"
     mode: 0600
   tags: init
   when: "'[init] This node has already been initialized' not in kubeadm_output.stderr"
