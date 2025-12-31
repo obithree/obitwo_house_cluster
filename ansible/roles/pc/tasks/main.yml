@@ -18,22 +18,31 @@
   become: yes
 
 # Google Chrome のインストール
-- name: Google Chrome GPGキーを追加
+- name: Google Chrome GPGキーの存在確認
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/google-chrome-keyring.gpg
+  register: chrome_gpg_key
+
+- name: Google Chrome GPGキーをダウンロード
   ansible.builtin.get_url:
-    url: "{{ item.url }}"
-    dest: "{{ item.keyring }}"
+    url: https://dl.google.com/linux/linux_signing_key.pub
+    dest: /tmp/google-chrome-keyring.asc
     mode: '0644'
-  loop: "{{ apt_keys }}"
-  when: item.name == 'google-chrome'
   become: yes
+  when: not chrome_gpg_key.stat.exists
+
+- name: Google Chrome GPGキーを変換して保存
+  ansible.builtin.shell: |
+    gpg --dearmor < /tmp/google-chrome-keyring.asc > /usr/share/keyrings/google-chrome-keyring.gpg
+    rm -f /tmp/google-chrome-keyring.asc
+  become: yes
+  when: not chrome_gpg_key.stat.exists
 
 - name: Google Chrome リポジトリを追加
   ansible.builtin.apt_repository:
-    repo: "{{ item.repo }}"
-    filename: "{{ item.filename }}"
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main"
+    filename: google-chrome
     state: present
-  loop: "{{ apt_repositories }}"
-  when: item.name == 'google-chrome'
   become: yes
 
 - name: Google Chrome をインストール
@@ -44,22 +53,31 @@
   become: yes
 
 # VSCode のインストール
-- name: VSCode GPGキーを追加
+- name: VSCode GPGキーの存在確認
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/microsoft-keyring.gpg
+  register: vscode_gpg_key
+
+- name: VSCode GPGキーをダウンロード
   ansible.builtin.get_url:
-    url: "{{ item.url }}"
-    dest: "{{ item.keyring }}"
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /tmp/microsoft-keyring.asc
     mode: '0644'
-  loop: "{{ apt_keys }}"
-  when: item.name == 'vscode'
   become: yes
+  when: not vscode_gpg_key.stat.exists
+
+- name: VSCode GPGキーを変換して保存
+  ansible.builtin.shell: |
+    gpg --dearmor < /tmp/microsoft-keyring.asc > /usr/share/keyrings/microsoft-keyring.gpg
+    rm -f /tmp/microsoft-keyring.asc
+  become: yes
+  when: not vscode_gpg_key.stat.exists
 
 - name: VSCode リポジトリを追加
   ansible.builtin.apt_repository:
-    repo: "{{ item.repo }}"
-    filename: "{{ item.filename }}"
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-keyring.gpg] https://packages.microsoft.com/repos/code stable main"
+    filename: vscode
     state: present
-  loop: "{{ apt_repositories }}"
-  when: item.name == 'vscode'
   become: yes
 
 - name: VSCode をインストール
