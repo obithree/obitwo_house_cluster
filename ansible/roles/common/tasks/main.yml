@@ -4,16 +4,19 @@
 #     name: "{{ hostname }}"
 #   tags: hostname
 
-- name: ロケールを生成
-  community.general.locale_gen:
-    name: "{{ locale }}"
-    state: present
-  tags: locale
+# - name: ロケールを生成
+#   community.general.locale_gen:
+#     name: "{{ locale }}"
+#     state: present
+#   tags: locale
 
-- name: ロケールを設定
-  community.general.locale:
-    locale: "{{ locale }}"
-  tags: locale
+# - name: ロケールを設定
+#   ansible.builtin.lineinfile:
+#     path: /etc/default/locale
+#     regexp: '^LANG='
+#     line: 'LANG={{ locale }}'
+#     create: yes
+#   tags: locale
 
 - name: タイムゾーンを設定
   community.general.timezone:
