@@ -1,0 +1,170 @@
+---
+# Minikube のインストールとセットアップ
+
+- name: システムパッケージを更新
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: yes
+
+- name: 必要な依存パッケージをインストール
+  ansible.builtin.apt:
+    name:
+      - curl
+      - apt-transport-https
+      - ca-certificates
+    state: present
+  become: yes
+
+# Docker がインストールされているか確認
+- name: Docker がインストールされているか確認
+  ansible.builtin.command: docker --version
+  register: docker_check
+  failed_when: false
+  changed_when: false
+
+- name: Docker が必要な場合の警告
+  ansible.builtin.fail:
+    msg: "Docker がインストールされていません。minikube_driver が docker の場合は、先に Docker をインストールしてください。"
+  when: 
+    - minikube_driver == "docker"
+    - docker_check.rc != 0
+
+# kubectl のインストール
+- name: kubectl がインストール済みか確認
+  ansible.builtin.command: kubectl version --client --short
+  register: kubectl_check
+  failed_when: false
+  changed_when: false
+
+- name: kubectl をインストール (未インストールの場合)
+  block:
+    - name: Kubernetes apt-key を追加
+      ansible.builtin.get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+        dest: /tmp/kubernetes-apt-keyring.key
+        mode: '0644'
+      become: yes
+
+    - name: Kubernetes apt-key を GPG 形式に変換
+      ansible.builtin.shell: |
+        cat /tmp/kubernetes-apt-keyring.key | gpg --dearmor -o /usr/share/keyrings/kubernetes-apt-keyring.gpg
+      become: yes
+
+    - name: Kubernetes リポジトリを追加
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
+        filename: kubernetes
+        state: present
+      become: yes
+
+    - name: kubectl をインストール
+      ansible.builtin.apt:
+        name: kubectl
+        state: present
+        update_cache: yes
+      become: yes
+  when: kubectl_check.rc != 0
+
+# Minikube のインストール
+- name: Minikube がインストール済みか確認
+  ansible.builtin.command: minikube version --short
+  register: minikube_check
+  failed_when: false
+  changed_when: false
+
+- name: 現在の Minikube バージョンを取得
+  ansible.builtin.set_fact:
+    installed_minikube_version: "{{ minikube_check.stdout | regex_search('v[0-9]+\\.[0-9]+\\.[0-9]+') }}"
+  when: minikube_check.rc == 0
+
+- name: Minikube の最新バージョンを取得
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/kubernetes/minikube/releases/latest
+    return_content: yes
+  register: minikube_latest
+  when: minikube_version == "latest"
+
+- name: Minikube ダウンロード URL を設定
+  ansible.builtin.set_fact:
+    minikube_download_url: "https://storage.googleapis.com/minikube/releases/{{ minikube_version == 'latest' | ternary(minikube_latest.json.tag_name, minikube_version) }}/minikube-linux-amd64"
+
+- name: Minikube をダウンロード・インストール
+  ansible.builtin.get_url:
+    url: "{{ minikube_download_url }}"
+    dest: /usr/local/bin/minikube
+    mode: '0755'
+  become: yes
+  when: minikube_check.rc != 0 or (minikube_version != "latest" and installed_minikube_version is defined and installed_minikube_version != minikube_version)
+
+- name: Minikube バージョン確認
+  ansible.builtin.command: minikube version --short
+  register: installed_minikube
+  changed_when: false
+
+- name: Minikube バージョンを表示
+  ansible.builtin.debug:
+    msg: "Minikube {{ installed_minikube.stdout }} がインストールされました"
+
+# Minikube クラスターの起動
+- name: Minikube クラスターの状態を確認
+  ansible.builtin.command: minikube status
+  register: minikube_status
+  failed_when: false
+  changed_when: false
+
+- name: Minikube クラスターを起動
+  ansible.builtin.command: >
+    minikube start
+    --driver={{ minikube_driver }}
+    --cpus={{ minikube_cpus }}
+    --memory={{ minikube_memory }}
+    --disk-size={{ minikube_disk_size }}
+    --kubernetes-version={{ kubernetes_version }}
+  register: minikube_start
+  when: "'Running' not in minikube_status.stdout"
+  changed_when: "'Done' in minikube_start.stdout"
+
+# アドオンの有効化
+- name: Minikube アドオンを有効化
+  ansible.builtin.command: minikube addons enable {{ item }}
+  loop: "{{ minikube_addons }}"
+  register: addon_enable
+  changed_when: "'was successfully enabled' in addon_enable.stdout"
+  failed_when: false
+
+# kubectl の設定確認
+- name: kubectl の設定を確認
+  ansible.builtin.command: kubectl get nodes
+  register: kubectl_nodes
+  changed_when: false
+  failed_when: false
+
+- name: kubectl 接続結果を表示
+  ansible.builtin.debug:
+    msg: "{{ kubectl_nodes.stdout_lines }}"
+  when: kubectl_nodes.rc == 0
+
+# 自動起動設定 (systemd サービス)
+- name: Minikube 自動起動サービスを作成
+  ansible.builtin.template:
+    src: minikube.service.j2
+    dest: /etc/systemd/system/minikube.service
+    mode: '0644'
+  become: yes
+  when: minikube_autostart
+
+- name: Minikube 自動起動を有効化
+  ansible.builtin.systemd:
+    name: minikube
+    enabled: yes
+    daemon_reload: yes
+  become: yes
+  when: minikube_autostart
+
+- name: Minikube セットアップ完了メッセージ
+  ansible.builtin.debug:
+    msg:
+      - "Minikube のセットアップが完了しました"
+      - "kubectl get nodes でクラスターの状態を確認できます"
+      - "minikube dashboard でダッシュボードにアクセスできます"

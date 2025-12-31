@@ -1,0 +1,14 @@
+---
+- name: Minikube のセットアップ
+  hosts: pc
+  become: yes
+  roles:
+    - role: minikube
+      vars:
+        minikube_driver: docker
+        minikube_cpus: 2
+        minikube_memory: "4096mb"
+        minikube_addons:
+          - ingress
+          - dashboard
+          - metrics-server

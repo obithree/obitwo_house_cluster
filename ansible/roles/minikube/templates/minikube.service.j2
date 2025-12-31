@@ -1,0 +1,15 @@
+[Unit]
+Description=Minikube Kubernetes Cluster
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User={{ ansible_user }}
+ExecStart=/usr/local/bin/minikube start --driver={{ minikube_driver }}
+ExecStop=/usr/local/bin/minikube stop
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

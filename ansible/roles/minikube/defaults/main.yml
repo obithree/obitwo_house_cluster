@@ -1,0 +1,26 @@
+---
+# Minikube のデフォルト設定
+
+# Minikubeのバージョン
+minikube_version: "latest"
+
+# Minikubeのドライバー
+# 選択肢: docker, kvm2, virtualbox, none
+minikube_driver: "docker"
+
+# Minikubeクラスター設定
+minikube_cpus: 2
+minikube_memory: "4096mb"
+minikube_disk_size: "20g"
+
+# Kubernetes バージョン
+kubernetes_version: "stable"
+
+# アドオン
+minikube_addons:
+  - ingress
+  - dashboard
+  - metrics-server
+
+# Minikubeの自動起動設定
+minikube_autostart: false
