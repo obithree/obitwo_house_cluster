@@ -38,10 +38,13 @@
   become: yes
   when: not chrome_gpg_key.stat.exists
 
-- name: Google Chrome リポジトリの存在確認
-  ansible.builtin.stat:
-    path: /etc/apt/sources.list.d/google-chrome.list
-  register: chrome_repo
+- name: Google Chrome リポジトリファイルの存在と内容を確認
+  ansible.builtin.shell: |
+    test -f /etc/apt/sources.list.d/google-chrome.list && \
+    grep -q 'http://dl.google.com/linux/chrome/deb/' /etc/apt/sources.list.d/google-chrome.list
+  register: chrome_repo_check
+  changed_when: false
+  failed_when: false
 
 - name: Google Chrome リポジトリを追加
   ansible.builtin.apt_repository:
@@ -50,7 +53,7 @@
     state: present
     update_cache: no
   become: yes
-  when: not chrome_repo.stat.exists
+  when: chrome_repo_check.rc != 0
 
 - name: Google Chrome をインストール
   ansible.builtin.apt:
@@ -80,10 +83,13 @@
   become: yes
   when: not vscode_gpg_key.stat.exists
 
-- name: VSCode リポジトリの存在確認
-  ansible.builtin.stat:
-    path: /etc/apt/sources.list.d/vscode.list
-  register: vscode_repo
+- name: VSCode リポジトリファイルの存在と内容を確認
+  ansible.builtin.shell: |
+    test -f /etc/apt/sources.list.d/vscode.list && \
+    grep -q 'https://packages.microsoft.com/repos/code' /etc/apt/sources.list.d/vscode.list
+  register: vscode_repo_check
+  changed_when: false
+  failed_when: false
 
 - name: VSCode リポジトリを追加
   ansible.builtin.apt_repository:
@@ -92,7 +98,7 @@
     state: present
     update_cache: no
   become: yes
-  when: not vscode_repo.stat.exists
+  when: vscode_repo_check.rc != 0
 
 - name: VSCode をインストール
   ansible.builtin.apt:

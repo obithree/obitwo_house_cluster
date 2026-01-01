@@ -51,10 +51,13 @@
   register: ubuntu_codename
   changed_when: false
 
-- name: Docker リポジトリファイルの存在確認
-  ansible.builtin.stat:
-    path: /etc/apt/sources.list.d/docker.list
-  register: docker_repo_file
+- name: Docker リポジトリファイルの存在と内容を確認
+  ansible.builtin.shell: |
+    test -f /etc/apt/sources.list.d/docker.list && \
+    grep -q 'https://download.docker.com/linux/ubuntu' /etc/apt/sources.list.d/docker.list
+  register: docker_repo_check
+  changed_when: false
+  failed_when: false
 
 - name: Docker リポジトリを追加
   ansible.builtin.apt_repository:
@@ -63,7 +66,7 @@
     state: present
     update_cache: no
   become: yes
-  when: not docker_repo_file.stat.exists
+  when: docker_repo_check.rc != 0
 
 - name: Docker パッケージをインストール
   ansible.builtin.apt:
