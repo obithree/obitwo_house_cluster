@@ -87,7 +87,7 @@
 
 - name: Minikube ダウンロード URL を設定
   ansible.builtin.set_fact:
-    minikube_download_url: "https://storage.googleapis.com/minikube/releases/{{ minikube_version == 'latest' | ternary(minikube_latest.json.tag_name, minikube_version) }}/minikube-linux-amd64"
+    minikube_download_url: "https://storage.googleapis.com/minikube/releases/{{ (minikube_version == 'latest') | ternary(minikube_latest.json.tag_name, minikube_version) }}/minikube-linux-amd64"
 
 - name: Minikube をダウンロード・インストール
   ansible.builtin.get_url:
