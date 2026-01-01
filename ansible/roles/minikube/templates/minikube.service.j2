@@ -7,7 +7,9 @@ Requires=docker.service
 Type=oneshot
 RemainAfterExit=yes
 User={{ ansible_user }}
-ExecStart=/usr/local/bin/minikube start --driver={{ minikube_driver }}
+Group={{ ansible_user }}
+Environment="HOME=/home/{{ ansible_user }}"
+ExecStart=/usr/local/bin/minikube start --driver={{ minikube_driver }} --cpus={{ minikube_cpus }} --memory={{ minikube_memory }} --disk-size={{ minikube_disk_size }}
 ExecStop=/usr/local/bin/minikube stop
 TimeoutStartSec=300
 
