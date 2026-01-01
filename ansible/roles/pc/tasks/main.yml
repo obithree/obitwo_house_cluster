@@ -38,12 +38,18 @@
   become: yes
   when: not chrome_gpg_key.stat.exists
 
+- name: Google Chrome リポジトリの存在確認
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/google-chrome.list
+  register: chrome_repo
+
 - name: Google Chrome リポジトリを追加
   ansible.builtin.apt_repository:
     repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main"
     filename: google-chrome
     state: present
   become: yes
+  when: not chrome_repo.stat.exists
 
 - name: Google Chrome をインストール
   ansible.builtin.apt:
@@ -73,12 +79,18 @@
   become: yes
   when: not vscode_gpg_key.stat.exists
 
+- name: VSCode リポジトリの存在確認
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/vscode.list
+  register: vscode_repo
+
 - name: VSCode リポジトリを追加
   ansible.builtin.apt_repository:
     repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-keyring.gpg] https://packages.microsoft.com/repos/code stable main"
     filename: vscode
     state: present
   become: yes
+  when: not vscode_repo.stat.exists
 
 - name: VSCode をインストール
   ansible.builtin.apt:
@@ -88,15 +100,23 @@
   become: yes
 
 # Steam のインストール
+- name: 32bit アーキテクチャの有効状態を確認
+  ansible.builtin.shell: dpkg --print-foreign-architectures | grep -q i386
+  register: i386_check
+  changed_when: false
+  failed_when: false
+
 - name: 32bit アーキテクチャを有効化 (Steamに必要)
   ansible.builtin.command: dpkg --add-architecture i386
   become: yes
-  changed_when: false
+  when: i386_check.rc != 0
+  register: i386_added
 
-- name: パッケージリストを更新
+- name: パッケージリストを更新 (i386追加時またはリポジトリ追加時のみ)
   ansible.builtin.apt:
     update_cache: yes
   become: yes
+  when: (i386_added is changed) or (chrome_repo is changed) or (vscode_repo is changed)
 
 - name: Steam をインストール
   ansible.builtin.apt:
@@ -105,24 +125,33 @@
   become: yes
 
 # Discord のインストール
+- name: Discord がインストール済みか確認
+  ansible.builtin.command: dpkg-query -W discord
+  register: discord_check
+  changed_when: false
+  failed_when: false
+
 - name: Discord の最新版をダウンロード
   ansible.builtin.get_url:
     url: https://discord.com/api/download?platform=linux&format=deb
     dest: /tmp/discord.deb
     mode: '0644'
   become: yes
+  when: discord_check.rc != 0 and not ansible_check_mode
 
 - name: Discord をインストール
   ansible.builtin.apt:
     deb: /tmp/discord.deb
     state: present
   become: yes
+  when: discord_check.rc != 0 and not ansible_check_mode
 
 - name: Discord インストーラーを削除
   ansible.builtin.file:
     path: /tmp/discord.deb
     state: absent
   become: yes
+  when: discord_check.rc != 0 and not ansible_check_mode
 
 # NVIDIA ドライバーのインストール
 - name: ubuntu-drivers-common をインストール
