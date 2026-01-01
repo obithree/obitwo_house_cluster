@@ -30,6 +30,48 @@
     - minikube_driver == "docker"
     - docker_check.rc != 0
 
+# GPU サポートの設定 (Docker + NVIDIA)
+- name: NVIDIA Container Toolkit のインストール (GPU有効時)
+  block:
+    - name: NVIDIA Container Toolkit GPGキーを追加
+      ansible.builtin.shell: |
+        curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      become: yes
+
+    - name: NVIDIA Container Toolkit リポジトリを追加
+      ansible.builtin.shell: |
+        curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+        sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+        tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+      become: yes
+      args:
+        creates: /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+    - name: NVIDIA Container Toolkit をインストール
+      ansible.builtin.apt:
+        name: nvidia-container-toolkit
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: Docker に NVIDIA Runtime を設定
+      ansible.builtin.command: nvidia-ctk runtime configure --runtime=docker
+      become: yes
+      register: nvidia_runtime_config
+      changed_when: "'Wrote updated config' in nvidia_runtime_config.stdout"
+
+    - name: Docker サービスを再起動
+      ansible.builtin.systemd:
+        name: docker
+        state: restarted
+      become: yes
+      when: nvidia_runtime_config.changed
+  when: 
+    - minikube_enable_gpu
+    - minikube_driver == "docker"
+
 # kubectl のインストール
 - name: kubectl がインストール済みか確認
   ansible.builtin.command: kubectl version --client --short
@@ -139,6 +181,9 @@
     --memory={{ minikube_memory }}
     --disk-size={{ minikube_disk_size }}
     --kubernetes-version={{ kubernetes_version }}
+    --nodes={{ minikube_nodes }}
+    {% if minikube_cni != 'auto' %}--cni={{ minikube_cni }}{% endif %}
+    {% if minikube_enable_gpu %}--gpus=all{% endif %}
   register: minikube_start
   when: "'Running' not in minikube_status.stdout"
   changed_when: "'Done' in minikube_start.stdout"

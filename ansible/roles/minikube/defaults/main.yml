@@ -13,6 +13,14 @@ minikube_driver: "docker"
 minikube_cpus: 2
 minikube_memory: "4096mb"
 minikube_disk_size: "20g"
+minikube_nodes: 2
+
+# CNI (Container Network Interface)
+# 選択肢: calico, flannel, cilium, auto
+minikube_cni: "calico"
+
+# GPU設定
+minikube_enable_gpu: true
 
 # Kubernetes バージョン
 kubernetes_version: "stable"
