@@ -138,6 +138,7 @@
   register: minikube_start
   when: "'Running' not in minikube_status.stdout"
   changed_when: "'Done' in minikube_start.stdout"
+  become: no
 
 # アドオンの有効化
 - name: Minikube アドオンを有効化
