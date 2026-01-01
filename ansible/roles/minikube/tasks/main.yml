@@ -91,12 +91,16 @@
     url: https://api.github.com/repos/kubernetes/minikube/releases/latest
     return_content: yes
   register: minikube_latest
+  check_mode: no
   when: minikube_version == "latest"
 
 - name: Minikube ダウンロード URL を設定 (最新版)
   ansible.builtin.set_fact:
     minikube_download_url: "https://storage.googleapis.com/minikube/releases/{{ minikube_latest.json.tag_name }}/minikube-linux-amd64"
-  when: minikube_version == "latest"
+  when: 
+    - minikube_version == "latest"
+    - minikube_latest is defined
+    - minikube_latest.json is defined
 
 - name: Minikube ダウンロード URL を設定 (指定バージョン)
   ansible.builtin.set_fact:
