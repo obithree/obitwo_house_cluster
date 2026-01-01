@@ -39,17 +39,25 @@
 
 - name: kubectl をインストール (未インストールの場合)
   block:
+    - name: GPG キーリングファイルの存在確認
+      ansible.builtin.stat:
+        path: /usr/share/keyrings/kubernetes-apt-keyring.gpg
+      register: k8s_keyring_stat
+
     - name: Kubernetes apt-key を追加
       ansible.builtin.get_url:
         url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
         dest: /tmp/kubernetes-apt-keyring.key
         mode: '0644'
       become: yes
+      when: not k8s_keyring_stat.stat.exists
 
     - name: Kubernetes apt-key を GPG 形式に変換
       ansible.builtin.shell: |
         cat /tmp/kubernetes-apt-keyring.key | gpg --dearmor -o /usr/share/keyrings/kubernetes-apt-keyring.gpg
       become: yes
+      args:
+        creates: /usr/share/keyrings/kubernetes-apt-keyring.gpg
 
     - name: Kubernetes リポジトリを追加
       ansible.builtin.apt_repository:
@@ -85,9 +93,15 @@
   register: minikube_latest
   when: minikube_version == "latest"
 
-- name: Minikube ダウンロード URL を設定
+- name: Minikube ダウンロード URL を設定 (最新版)
   ansible.builtin.set_fact:
-    minikube_download_url: "https://storage.googleapis.com/minikube/releases/{{ (minikube_version == 'latest') | ternary(minikube_latest.json.tag_name, minikube_version) }}/minikube-linux-amd64"
+    minikube_download_url: "https://storage.googleapis.com/minikube/releases/{{ minikube_latest.json.tag_name }}/minikube-linux-amd64"
+  when: minikube_version == "latest"
+
+- name: Minikube ダウンロード URL を設定 (指定バージョン)
+  ansible.builtin.set_fact:
+    minikube_download_url: "https://storage.googleapis.com/minikube/releases/{{ minikube_version }}/minikube-linux-amd64"
+  when: minikube_version != "latest"
 
 - name: Minikube をダウンロード・インストール
   ansible.builtin.get_url:
@@ -154,13 +168,13 @@
   become: yes
   when: minikube_autostart
 
-- name: Minikube 自動起動を有効化
-  ansible.builtin.systemd:
-    name: minikube
-    enabled: yes
-    daemon_reload: yes
-  become: yes
-  when: minikube_autostart
+# - name: Minikube 自動起動を有効化
+#   ansible.builtin.systemd:
+#     name: minikube
+#     enabled: yes
+#     daemon_reload: yes
+#   become: yes
+#   when: minikube_autostart
 
 - name: Minikube セットアップ完了メッセージ
   ansible.builtin.debug:
