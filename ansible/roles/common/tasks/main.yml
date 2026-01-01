@@ -23,11 +23,19 @@
     name: "{{ timezone }}"
   tags: timezone
 
+- name: キーボードレイアウトの現在の設定を確認
+  ansible.builtin.shell: grep -E '^XKBLAYOUT=' /etc/default/keyboard || echo 'XKBLAYOUT='
+  register: current_keyboard_layout
+  changed_when: false
+  failed_when: false
+  tags: keyboard
+
 - name: キーボードレイアウトを設定 (日本語)
   lineinfile:
     path: /etc/default/keyboard
     regexp: '^XKBLAYOUT='
     line: 'XKBLAYOUT=jp'
+  when: "'XKBLAYOUT=jp' not in current_keyboard_layout.stdout"
   tags: keyboard
 
 - name: apt リポジトリ情報を更新

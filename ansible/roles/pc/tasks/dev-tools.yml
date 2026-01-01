@@ -38,6 +38,8 @@
     dest: /usr/share/keyrings/docker-archive-keyring.asc
     mode: '0644'
   become: yes
+  register: docker_gpg
+  changed_when: false
 
 - name: システムアーキテクチャを取得
   ansible.builtin.command: dpkg --print-architecture
@@ -49,12 +51,19 @@
   register: ubuntu_codename
   changed_when: false
 
+- name: Docker リポジトリファイルの存在確認
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/docker.list
+  register: docker_repo_file
+
 - name: Docker リポジトリを追加
   ansible.builtin.apt_repository:
     repo: "deb [arch={{ system_arch.stdout }} signed-by=/usr/share/keyrings/docker-archive-keyring.asc] https://download.docker.com/linux/ubuntu {{ ubuntu_codename.stdout }} stable"
     filename: docker
     state: present
+    update_cache: no
   become: yes
+  when: not docker_repo_file.stat.exists
 
 - name: Docker パッケージをインストール
   ansible.builtin.apt:
@@ -153,6 +162,14 @@
   become_user: "{{ default_user }}"
   when: not pyenv_installed.stat.exists
 
+- name: .bashrc に pyenv 設定があるか確認
+  ansible.builtin.shell: grep -q 'ANSIBLE MANAGED BLOCK - pyenv' "/home/{{ default_user }}/.bashrc"
+  register: bashrc_pyenv_check
+  changed_when: false
+  failed_when: false
+  become: yes
+  become_user: "{{ default_user }}"
+
 - name: .bashrc に pyenv 設定を追加
   ansible.builtin.blockinfile:
     path: "/home/{{ default_user }}/.bashrc"
@@ -166,6 +183,7 @@
     create: yes
   become: yes
   become_user: "{{ default_user }}"
+  when: bashrc_pyenv_check.rc != 0
 
 - name: .profile に pyenv 設定を追加
   ansible.builtin.blockinfile:

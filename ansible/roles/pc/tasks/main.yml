@@ -48,6 +48,7 @@
     repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main"
     filename: google-chrome
     state: present
+    update_cache: no
   become: yes
   when: not chrome_repo.stat.exists
 
@@ -89,6 +90,7 @@
     repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-keyring.gpg] https://packages.microsoft.com/repos/code stable main"
     filename: vscode
     state: present
+    update_cache: no
   become: yes
   when: not vscode_repo.stat.exists
 
