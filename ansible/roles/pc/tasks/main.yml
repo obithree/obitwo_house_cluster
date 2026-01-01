@@ -124,7 +124,7 @@
   ansible.builtin.apt:
     update_cache: yes
   become: yes
-  when: (i386_added is changed) or (chrome_repo is changed) or (vscode_repo is changed)
+  when: (i386_added is changed) or (chrome_repo_check.rc != 0) or (vscode_repo_check.rc != 0)
 
 - name: Steam をインストール
   ansible.builtin.apt:
