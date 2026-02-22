@@ -1,0 +1,15 @@
+# ArgoCD development environment values
+
+ingress:
+  enabled: true
+  className: nginx
+  # 開発環境では localhost でアクセス
+  host: localhost
+  port: 8080
+
+service:
+  name: argocd-server
+  port: 8080
+
+annotations:
+  nginx.ingress.kubernetes.io/backend-protocol: "HTTP"

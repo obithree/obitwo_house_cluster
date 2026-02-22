@@ -1,0 +1,14 @@
+# ArgoCD default values
+
+ingress:
+  enabled: true
+  className: nginx
+  host: argocd.home.local
+  port: 8080
+
+service:
+  name: argocd-server
+  port: 8080
+
+annotations:
+  nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
