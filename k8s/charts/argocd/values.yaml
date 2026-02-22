@@ -4,11 +4,11 @@ ingress:
   enabled: true
   className: nginx
   host: argocd.home.local
-  port: 8080
+  port: 443
 
 service:
   name: argocd-server
-  port: 80
+  port: 443
 
 annotations:
   nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
