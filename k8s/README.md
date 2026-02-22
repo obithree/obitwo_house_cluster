@@ -413,8 +413,140 @@ kubectl get events -n llm --sort-by='.lastTimestamp'
 - 本リポジトリのディレクトリ構成については上記「ディレクトリ構成」セクションを参照
 - App of Apps パターンについては `argocd/bootstrap/app-of-apps-dev.yaml` のコメントを参照
 
+## 本番環境での Kubernetes セットアップ
+
+### 前提条件
+
+- Kubernetes クラスタが起動していること（kubeadm または k3s）
+- kubectl が設定済みであること
+- Nginx Ingress Controller がインストールされていること
+
+```bash
+# Nginx Ingress Controller のインストール
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --create-namespace
+```
+
+### Ingress + ArgoCD のセットアップ
+
+#### 1. Ingress の適用
+
+```bash
+# Ingress を適用
+kubectl apply -f k8s/manifests/argocd/ingress.yaml
+
+# Ingress が正常に作成されたか確認
+kubectl get ingress -n argocd
+
+# 詳細情報を確認
+kubectl describe ingress argocd-ingress -n argocd
+```
+
+期待される出力：
+
+```
+NAME              CLASS   HOSTS              ADDRESS       PORTS   AGE
+argocd-ingress    nginx   argocd.home.local  192.168.1.10  80      2m
+```
+
+#### 2. ローカルDNS設定
+
+クライアント PC の `/etc/hosts` に以下を追加：
+
+```bash
+# Linux / macOS
+echo "192.168.1.10  argocd.home.local" | sudo tee -a /etc/hosts
+
+# Windows (管理者権限で実行)
+# C:\Windows\System32\drivers\etc\hosts に以下を追加
+# 192.168.1.10  argocd.home.local
+```
+
+複数ノードがある場合は、すべてのノードの IP を追加することで冗長性が確保されます：
+
+```bash
+echo "192.168.1.10  argocd.home.local" | sudo tee -a /etc/hosts
+echo "192.168.1.11  argocd.home.local" | sudo tee -a /etc/hosts
+echo "192.168.1.12  argocd.home.local" | sudo tee -a /etc/hosts
+```
+
+#### 3. ブラウザでアクセス
+
+```
+http://argocd.home.local
+```
+
+### nip.io でのアクセス（ローカルDNS不要）
+
+ローカルDNS設定をしたくない場合、nip.io を使用できます：
+
+```bash
+# ingress.yaml をコメント解除して nip.io 版を有効化
+# 自宅サーバのIPアドレスに置き換えて実行
+#例: 192.168.1.10 の場合
+http://argocd.192.168.1.10.nip.io
+```
+
+### 複数ノード環境での Ingress
+
+複数ノードがある場合、Ingress Controller はどのノードにでも配置できます：
+
+```bash
+# Ingress Controller の配置先を確認
+kubectl get pods -n ingress-nginx -o wide
+
+# Nginx Ingress Controller は全ノードのポート 80 をリッスン
+# したがって、どのノードの IP でもアクセス可能
+```
+
+### トラブルシューティング
+
+#### Ingress が ADDRESS を取得できない場合
+
+```bash
+# Nginx Ingress Controller が起動しているか確認
+kubectl get pods -n ingress-nginx
+
+# ポート 80 がリッスンしているか確認
+netstat -tlnp | grep :80
+
+# ファイアウォール設定を確認
+sudo ufw status
+sudo ufw allow 80/tcp
+```
+
+#### DNS 解決に失敗する場合
+
+```bash
+# /etc/hosts の設定を確認
+cat /etc/hosts | grep argocd
+
+# DNS 解決をテスト
+dig argocd.home.local
+nslookup argocd.home.local
+
+# または nip.io で直接アクセス
+# http://argocd.192.168.1.10.nip.io
+```
+
+#### Ingress でアクセスできない場合
+
+```bash
+# ArgoCD サービスが正常か確認
+kubectl get svc -n argocd
+
+# Ingress のログを確認
+kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx
+
+# Ingress の詳細情報を確認
+kubectl describe ingress argocd-ingress -n argocd
+```
+
 ## 参考リンク
 
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
 - [Helm Documentation](https://helm.sh/docs/)
 - [App of Apps Pattern](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/)
+- [Nginx Ingress Controller](https://kubernetes.github.io/ingress-nginx/)
+- [nip.io - DNS for any IP](https://nip.io/)

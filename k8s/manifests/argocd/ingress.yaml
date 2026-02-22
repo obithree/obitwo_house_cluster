@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-ingress
+  namespace: argocd
+  annotations:
+    # nginx-ingress の設定
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: 192.168.1.10
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 8080
+
+---
+# nip.io を使用する場合の代替設定
+# コメントを外して自宅サーバのIPに置き換えて使用
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: argocd-ingress-nip
+#   namespace: argocd
+# spec:
+#   ingressClassName: nginx
+#   rules:
+#   - host: argocd.192.168.1.10.nip.io
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: argocd-server
+#             port:
+#               number: 443
