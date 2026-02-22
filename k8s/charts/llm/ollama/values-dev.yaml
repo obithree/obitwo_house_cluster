@@ -21,3 +21,9 @@ resources:
 
 gpu:
   enabled: true
+
+# 開発環境では軽量モデルをダウンロード
+# VRAM 8GB推奨: gemma3:2b (最新・軽量・高速)
+models:
+  - gemma3:2b
+  - mistral

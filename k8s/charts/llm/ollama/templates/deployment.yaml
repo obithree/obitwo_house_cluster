@@ -16,6 +16,27 @@ spec:
       labels:
         app: ollama
     spec:
+      {{- if .Values.models }}
+      initContainers:
+      - name: model-puller
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+          - /bin/sh
+          - -c
+          - |
+            {{- range .Values.models }}
+            ollama pull {{ . }}
+            {{- end }}
+        env:
+        - name: OLLAMA_HOST
+          value: "http://127.0.0.1:11434"
+        volumeMounts:
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          mountPath: /root/.ollama
+        {{- end }}
+      {{- end }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"

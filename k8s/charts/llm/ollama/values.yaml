@@ -33,3 +33,8 @@ gpu:
   driverCapabilities: "compute,utility"
 
 env: []
+
+# モデルのリスト（Pod起動時に自動ダウンロード）
+models: []
+  # - mistral
+  # - neural-chat
