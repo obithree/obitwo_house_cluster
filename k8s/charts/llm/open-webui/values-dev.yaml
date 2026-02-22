@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  tag: "main"
+
+service:
+  type: NodePort
+
+persistence:
+  size: 5Gi
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "500m"
+  limits:
+    memory: "1Gi"
+    cpu: "1000m"
+
+ollama:
+  baseUrl: "http://ollama:11434"

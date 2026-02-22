@@ -1,0 +1,21 @@
+replicaCount: 2
+
+image:
+  tag: "main"
+
+service:
+  type: ClusterIP
+
+persistence:
+  size: 20Gi
+
+resources:
+  requests:
+    memory: "1Gi"
+    cpu: "1000m"
+  limits:
+    memory: "2Gi"
+    cpu: "2000m"
+
+ollama:
+  baseUrl: "http://ollama:11434"

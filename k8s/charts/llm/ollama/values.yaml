@@ -1,0 +1,35 @@
+replicaCount: 1
+
+image:
+  repository: ollama/ollama
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: NodePort
+  port: 11434
+  targetPort: 11434
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+    gpu: "1"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+    gpu: "1"
+
+gpu:
+  enabled: true
+  vendor: nvidia
+  visibleDevices: "all"
+  driverCapabilities: "compute,utility"
+
+env: []
