@@ -5,14 +5,14 @@ ingress:
   className: nginx
   # 開発環境では全ホストを受け付ける（ホスト指定なし）
   host: ~
-  port: 8080
+  port: 443  # サービスのHTTPSポート
 
 service:
   name: argocd-server
   port: 443
 
 annotations:
-  nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
   nginx.ingress.kubernetes.io/ssl-verify: "false"
   nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
   nginx.ingress.kubernetes.io/proxy-body-size: "0"
