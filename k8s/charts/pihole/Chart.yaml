@@ -1,0 +1,6 @@
+apiVersion: v2
+name: pihole
+description: Pi-hole DNS server with ad-blocking
+type: application
+version: 1.0.0
+appVersion: "2024.07.0"

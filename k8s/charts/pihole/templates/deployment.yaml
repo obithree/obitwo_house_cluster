@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pihole
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pihole-config
+  namespace: pihole
+data:
+  dnsmasq.conf: |
+    # Custom DNS records
+    address=/argocd.home.local/10.100.116.209
+    address=/ollama.home.local/10.100.116.209
+    address=/webui.home.local/10.100.116.209
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pihole-dns
+  namespace: pihole
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: dns-udp
+    port: {{ .Values.service.dns.port }}
+    protocol: UDP
+    targetPort: 53
+    nodePort: {{ .Values.service.dns.nodePort }}
+  - name: dns-tcp
+    port: {{ .Values.service.dns.port }}
+    protocol: TCP
+    targetPort: 53
+  selector:
+    app: pihole
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pihole-web
+  namespace: pihole
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: http
+    port: {{ .Values.service.web.port }}
+    targetPort: 80
+    nodePort: {{ .Values.service.web.nodePort }}
+  selector:
+    app: pihole
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pihole-pvc
+  namespace: pihole
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.persistence.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pihole
+  namespace: pihole
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: pihole
+  template:
+    metadata:
+      labels:
+        app: pihole
+    spec:
+      containers:
+      - name: pihole
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: dns
+          containerPort: 53
+          protocol: UDP
+        - name: dns-tcp
+          containerPort: 53
+          protocol: TCP
+        - name: http
+          containerPort: 80
+        env:
+        - name: TZ
+          value: {{ .Values.env.TZ }}
+        - name: WEBPASSWORD
+          value: {{ .Values.env.WEBPASSWORD }}
+        - name: DNS1
+          value: "8.8.8.8"
+        - name: DNS2
+          value: "8.8.4.4"
+        volumeMounts:
+        - name: pihole-storage
+          mountPath: /etc/pihole
+        - name: dnsmasq-config
+          mountPath: /etc/dnsmasq.d/custom.conf
+          subPath: dnsmasq.conf
+      volumes:
+      - name: pihole-storage
+        persistentVolumeClaim:
+          claimName: pihole-pvc
+      - name: dnsmasq-config
+        configMap:
+          name: pihole-config

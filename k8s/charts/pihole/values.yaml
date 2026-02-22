@@ -1,0 +1,29 @@
+# Pi-hole default values
+image:
+  repository: pihole/pihole
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: NodePort
+  dns:
+    port: 53
+    nodePort: 30053
+  web:
+    port: 80
+    nodePort: 30080
+
+persistence:
+  enabled: true
+  storageClass: "standard"
+  size: 5Gi
+
+env:
+  TZ: Asia/Tokyo
+  WEBPASSWORD: "admin123"
+
+adlists:
+  - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+  - https://280blocker.net/files/280blocker_adblock_202602.txt

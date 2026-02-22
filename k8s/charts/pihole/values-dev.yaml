@@ -1,0 +1,17 @@
+# Pi-hole development environment values
+replicaCount: 1
+
+service:
+  type: NodePort
+  dns:
+    nodePort: 30053
+  web:
+    nodePort: 30080
+
+persistence:
+  enabled: true
+  size: 5Gi
+
+env:
+  TZ: Asia/Tokyo
+  WEBPASSWORD: "dev123"

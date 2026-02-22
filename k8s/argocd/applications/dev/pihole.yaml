@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pihole-dev
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/obithree/obitwo_house_cluster.git
+    targetRevision: main
+    path: k8s/charts/pihole
+    helm:
+      values: |
+        replicaCount: 1
+        image:
+          repository: pihole/pihole
+          tag: latest
+        service:
+          type: NodePort
+          dns:
+            port: 53
+            nodePort: 30053
+          web:
+            port: 80
+            nodePort: 30080
+        persistence:
+          enabled: true
+          size: 5Gi
+        env:
+          TZ: Asia/Tokyo
+          WEBPASSWORD: "dev123"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pihole
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
