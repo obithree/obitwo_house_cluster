@@ -24,8 +24,20 @@ spec:
             port:
               number: {{ .port }}
   {{- end }}
+  {{- else if and .Values.ingress.host (ne .Values.ingress.host "~") }}
+  # ホストを指定する場合
+  - host: {{ .Values.ingress.host | quote }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.service.name }}
+            port:
+              number: {{ .Values.ingress.port }}
   {{- else }}
-  # ホスト指定なし - すべてのホストを受け付ける
+  # ホスト指定なし - すべてのホストを受け付ける（開発環境用）
   - http:
       paths:
       - path: /
