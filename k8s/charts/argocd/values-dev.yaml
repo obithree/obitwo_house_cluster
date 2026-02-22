@@ -9,7 +9,7 @@ ingress:
 
 service:
   name: argocd-server
-  port: 8080
+  port: 80
 
 annotations:
   nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
