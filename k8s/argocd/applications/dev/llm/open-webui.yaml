@@ -8,8 +8,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/obitwo/obitwo_house_cluster.git  # 実際のリポジトリURLに変更してください
-    targetRevision: HEAD
+    repoURL: https://github.com/obithree/obitwo_house_cluster.git
+    targetRevision: main
     path: k8s/charts/llm/open-webui
     helm:
       valueFiles:

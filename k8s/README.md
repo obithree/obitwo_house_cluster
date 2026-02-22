@@ -238,6 +238,181 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
+## ArgoCD 初回セットアップ手順
+
+### 前提条件
+
+- minikubeが起動していること
+- kubectlが設定済みであること
+- gitクローンが完了していること
+
+### セットアップ
+
+#### 1. ArgoCD Namespace の作成と ArgoCD のインストール
+
+```bash
+# ArgoCD namespace を作成
+kubectl create namespace argocd
+
+# 公式 ArgoCD Manifest をインストール
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+ArgoCD のデプロイメントが起動するまで待ちます：
+
+```bash
+# ステータスを確認
+kubectl get pods -n argocd -w
+# すべてのポッドが Running になるまで待機
+```
+
+#### 2. クラスタ共通リソース (Namespace, RBAC等) の作成
+
+```bash
+# llm namespace と ClusterRole を作成
+kubectl apply -f k8s/manifests/namespaces/llm.yaml
+kubectl apply -f k8s/manifests/rbac/clusterrole.yaml
+```
+
+#### 3. App of Apps パターンの初期化
+
+```bash
+# 共通リソースを管理する Application を作成
+kubectl apply -f k8s/argocd/applications/base/manifests.yaml
+
+# 開発環境の App of Apps をデプロイ
+kubectl apply -f k8s/argocd/bootstrap/app-of-apps-dev.yaml
+```
+
+#### 4. 同期状態の確認
+
+```bash
+# Application の状態を確認
+kubectl get applications -n argocd
+
+# 詳細な情報を確認
+kubectl describe app app-of-apps-dev -n argocd
+
+# 子アプリケーションの状態を確認
+kubectl get applications -n argocd -o wide
+```
+
+期待される出力（初回は同期に数分かかる可能性があります）：
+
+```
+NAME                SYNC STATUS     HEALTH STATUS
+cluster-manifests   Synced          Healthy
+app-of-apps-dev     Synced          Healthy
+ollama-dev          Synced          Healthy
+open-webui-dev      Synced          Healthy
+```
+
+#### 5. リソースのデプロイ確認
+
+```bash
+# llm namespace にデプロイされたポッドを確認
+kubectl get pods -n llm
+
+# サービスを確認
+kubectl get svc -n llm
+
+# デプロイメントを確認
+kubectl get deployment -n llm
+```
+
+期待される出力（起動に数分かかる場合があります）：
+
+```
+NAME                                 READY   STATUS    RESTARTS
+ollama-6f8c9d7-abcde                 1/1     Running   0
+open-webui-6g8d9e7-bcdef             1/1     Running   0
+```
+
+### ArgoCD UI へのアクセス
+
+#### ポートフォワードの設定
+
+```bash
+# ArgoCD UI にアクセスできるようにポートフォワード
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+#### UI へのアクセス
+
+- ブラウザで `https://localhost:8080` にアクセス
+- ユーザー名: `admin`
+- パスワード: 下記コマンドで取得
+
+```bash
+# 初期パスワードを取得
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+echo  # 改行を追加
+```
+
+#### パスワード変更の推奨
+
+セキュリティのため、初回ログイン後にパスワードを変更してください：
+
+1. UI の右上のユーザーアイコンをクリック
+2. "User Info" をクリック
+3. "Update Password" で新しいパスワードを設定
+
+または CLI から：
+
+```bash
+# CLI でパスワードを変更
+argocd account update-password \
+  --account admin \
+  --current-password <現在のパスワード> \
+  --new-password <新しいパスワード> \
+  --server localhost:8080 \
+  --insecure
+```
+
+### 本番環境のセットアップ
+
+```bash
+# 本番環境の App of Apps をデプロイ
+kubectl apply -f k8s/argocd/bootstrap/app-of-apps-prd.yaml
+
+# 本番環境のアプリケーション状態を確認
+kubectl get applications -n argocd -l env=prd
+```
+
+### トラブルシューティング
+
+#### Application の同期が失敗している場合
+
+```bash
+# 詳細なエラーメッセージを確認
+kubectl describe app <アプリケーション名> -n argocd | grep -A 10 "Message:"
+
+# ArgoCD のログを確認
+kubectl logs -n argocd -l app.kubernetes.io/name=argocd-application-controller -f
+
+# リソースを強制的に削除してリセット
+kubectl delete app <アプリケーション名> -n argocd
+```
+
+#### ポッドが起動しない場合
+
+```bash
+# ポッドのログを確認
+kubectl logs -n llm <ポッド名>
+
+# ポッドの詳細情報を確認
+kubectl describe pod -n llm <ポッド名>
+
+# Events を確認
+kubectl get events -n llm --sort-by='.lastTimestamp'
+```
+
+### 参考情報
+
+- ArgoCD Documentation: https://argo-cd.readthedocs.io/
+- 本リポジトリのディレクトリ構成については上記「ディレクトリ構成」セクションを参照
+- App of Apps パターンについては `argocd/bootstrap/app-of-apps-dev.yaml` のコメントを参照
+
 ## 参考リンク
 
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)

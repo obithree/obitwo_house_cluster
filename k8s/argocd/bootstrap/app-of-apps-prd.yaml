@@ -7,13 +7,12 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  sources:
-    - repoURL: https://github.com/obitwo/obitwo_house_cluster.git  # 実際のリポジトリURLに変更してください
-      targetRevision: HEAD
-      path: k8s/argocd/applications/base
-    - repoURL: https://github.com/obitwo/obitwo_house_cluster.git
-      targetRevision: HEAD
-      path: k8s/argocd/applications/prd
+  source:
+    repoURL: https://github.com/obithree/obitwo_house_cluster.git
+    targetRevision: main
+    path: k8s/argocd/applications/prd
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
