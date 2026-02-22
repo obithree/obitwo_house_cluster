@@ -5,11 +5,11 @@ ingress:
   className: nginx
   # 本番環境ではドメイン名でアクセス
   host: argocd.home.local
-  port: 443
+  port: 80
 
 service:
   name: argocd-server
-  port: 443
+  port: 80
 
 annotations:
   nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
