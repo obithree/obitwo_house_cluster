@@ -11,8 +11,22 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
-  - host: {{ .Values.ingress.host }}
+  {{- if .Values.ingress.hosts }}
+  {{- range .Values.ingress.hosts }}
+  - host: {{ .host | quote }}
     http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .service }}
+            port:
+              number: {{ .port }}
+  {{- end }}
+  {{- else }}
+  # ホスト指定なし - すべてのホストを受け付ける
+  - http:
       paths:
       - path: /
         pathType: Prefix
@@ -21,4 +35,5 @@ spec:
             name: {{ .Values.service.name }}
             port:
               number: {{ .Values.ingress.port }}
+  {{- end }}
 {{- end }}
