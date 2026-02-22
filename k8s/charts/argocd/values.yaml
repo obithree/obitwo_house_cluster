@@ -11,4 +11,4 @@ service:
   port: 80
 
 annotations:
-  nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
