@@ -1,6 +1,6 @@
 ---
 - name: Ubuntu PCのセットアップ
-  hosts: pc
+  hosts: localhost
   become: yes
   roles:
     - common
