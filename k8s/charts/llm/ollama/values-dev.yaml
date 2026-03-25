@@ -27,3 +27,4 @@ gpu:
 models:
   - gemma3:2b
   - mistral
+  - qwen3.5:9b
