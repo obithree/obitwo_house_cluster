@@ -34,21 +34,6 @@ spec:
         {{- with .Values.env }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if .Values.models }}
-        lifecycle:
-          postStart:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  sleep 5
-                  {{- range .Values.models }}
-                  if ! ollama list | grep -q "{{ . }}"; then
-                    ollama pull {{ . }}
-                  fi
-                  {{- end }}
-        {{- end }}
         volumeMounts:
         {{- if .Values.persistence.enabled }}
         - name: data

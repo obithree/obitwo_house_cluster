@@ -1,0 +1,85 @@
+{{- if .Values.modelInstallJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ollama-model-install-{{ .Values.modelInstallJob.version | default "v1" }}
+  labels:
+    app: ollama
+    job: model-install
+spec:
+  ttlSecondsAfterFinished: 86400  # 24時間後に自動削除
+  template:
+    metadata:
+      labels:
+        app: ollama
+        job: model-install
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: model-installer
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        command:
+          - /bin/sh
+          - -c
+          - |
+            set -e
+            
+            # バックグラウンドでOllamaサーバーを起動
+            echo "Starting Ollama server..."
+            ollama serve &
+            OLLAMA_PID=$!
+            
+            # Ollamaサーバーが起動するまで待機
+            echo "Waiting for Ollama server to be ready..."
+            for i in $(seq 1 30); do
+              if curl -s http://localhost:11434 > /dev/null 2>&1; then
+                echo "Ollama server is ready!"
+                break
+              fi
+              echo "Waiting... ($i/30)"
+              sleep 2
+            done
+            
+            # 各モデルをダウンロード
+            {{- range .Values.modelInstallJob.models }}
+            echo "Installing model: {{ . }}"
+            if ollama list | grep -q "{{ . }}"; then
+              echo "Model {{ . }} already exists, skipping..."
+            else
+              echo "Pulling model {{ . }}..."
+              ollama pull {{ . }}
+              echo "Model {{ . }} installed successfully!"
+            fi
+            {{- end }}
+            
+            echo "All models installed successfully!"
+            
+            # Ollamaサーバーを停止
+            kill $OLLAMA_PID || true
+            wait $OLLAMA_PID || true
+        {{- if .Values.gpu.enabled }}
+        env:
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: {{ .Values.gpu.visibleDevices | quote }}
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: {{ .Values.gpu.driverCapabilities | quote }}
+        {{- end }}
+        volumeMounts:
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          mountPath: /root/.ollama
+        {{- end }}
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      {{- if .Values.persistence.enabled }}
+      - name: data
+        persistentVolumeClaim:
+          claimName: ollama-data
+      {{- end }}
+{{- end }}
