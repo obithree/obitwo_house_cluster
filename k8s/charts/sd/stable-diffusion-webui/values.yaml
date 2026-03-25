@@ -1,0 +1,26 @@
+replicaCount: 1
+
+image:
+  repository: lscr.io/linuxserver/stable-diffusion-webui
+  tag: latest # CPU by default, GPU requires specific tags or settings
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 7860
+
+resources: {}
+  # limits:
+  #   nvidia.com/gpu: 1
+
+persistence:
+  enabled: true
+  storageClass: "standard" # Assuming minikube or default storageclass
+  size: 50Gi
+
+env:
+  - name: CLI_ARGS
+    value: "--listen --api"
