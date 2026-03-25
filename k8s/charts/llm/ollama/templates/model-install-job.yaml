@@ -57,13 +57,10 @@ spec:
             # Ollamaサーバーを停止
             kill $OLLAMA_PID || true
             wait $OLLAMA_PID || true
-        {{- if .Values.gpu.enabled }}
+        # モデルインストール時はGPU不要のため設定しない
         env:
         - name: NVIDIA_VISIBLE_DEVICES
-          value: {{ .Values.gpu.visibleDevices | quote }}
-        - name: NVIDIA_DRIVER_CAPABILITIES
-          value: {{ .Values.gpu.driverCapabilities | quote }}
-        {{- end }}
+          value: "void"
         volumeMounts:
         {{- if .Values.persistence.enabled }}
         - name: data
