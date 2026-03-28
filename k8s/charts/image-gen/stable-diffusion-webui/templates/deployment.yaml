@@ -21,6 +21,8 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["bash", "webui.sh"]
+          args: {{ toYaml .Values.webuiArgs | nindent 12 }}
           ports:
             - name: http
               containerPort: 7860

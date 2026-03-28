@@ -12,5 +12,7 @@ resources:
 env:
   - name: CLI_ARGS
     value: "--api --listen"
-  - name: DOCKER_MODS
-    value: "linuxserver/mods:stable-diffusion-webui-api"
+
+webuiArgs:
+  - "--listen"
+  - "--api"

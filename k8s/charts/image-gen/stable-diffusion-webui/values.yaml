@@ -24,3 +24,8 @@ persistence:
 env:
   - name: CLI_ARGS
     value: "--listen --api"
+
+webuiArgs:
+  - "--listen"
+  - "--api"
+  - "--skip-torch-cuda-test"
