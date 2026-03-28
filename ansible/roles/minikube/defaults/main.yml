@@ -10,8 +10,8 @@ minikube_version: "latest"
 minikube_driver: "docker"
 
 # Minikubeクラスター設定
-minikube_cpus: 2
-minikube_memory: "4096mb"
+minikube_cpus: 6
+minikube_memory: "16384mb"
 minikube_disk_size: "20g"
 minikube_nodes: 2
 

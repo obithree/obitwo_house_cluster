@@ -11,12 +11,12 @@ persistence:
 
 resources:
   requests:
-    memory: "2Gi"
-    cpu: "1000m"
-    gpu: "1"
-  limits:
     memory: "4Gi"
     cpu: "2000m"
+    gpu: "1"
+  limits:
+    memory: "8Gi"
+    cpu: "4000m"
     gpu: "1"
 
 gpu:
