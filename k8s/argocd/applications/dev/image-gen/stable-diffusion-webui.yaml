@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/obithree/obitwo_house_cluster.git
     targetRevision: main
-    path: k8s/charts/sd/stable-diffusion-webui
+    path: k8s/charts/image-gen/stable-diffusion-webui
     helm:
       valueFiles:
         - values-dev.yaml

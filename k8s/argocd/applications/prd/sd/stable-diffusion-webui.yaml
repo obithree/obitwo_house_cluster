@@ -16,7 +16,7 @@ spec:
         - values-prd.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: sd
+    namespace: image-gen
   syncPolicy:
     automated:
       prune: true

@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: stable-diffusion-webui-dev
+  name: stable-diffusion-webui-prd
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,10 +10,10 @@ spec:
   source:
     repoURL: https://github.com/obithree/obitwo_house_cluster.git
     targetRevision: main
-    path: k8s/charts/sd/stable-diffusion-webui
+    path: k8s/charts/image-gen/stable-diffusion-webui
     helm:
       valueFiles:
-        - values-dev.yaml
+        - values-prd.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: image-gen
