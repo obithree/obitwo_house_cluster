@@ -254,9 +254,13 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 # ArgoCD namespace を作成
 kubectl create namespace argocd
 
-# 公式 ArgoCD Manifest をインストール
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+# 公式 ArgoCD Manifest をインストール（バージョンを固定して適用）
+# CRDのサイズ超過エラーを避けるため --server-side オプションを使用
+kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v3.3.6/manifests/install.yaml
 ```
+
+> **注意**: `stable` タグではなくバージョンを固定することを推奨します。
+> `--server-side` はCRD（`applicationsets.argoproj.io` 等）が 262144 bytes を超えるため必須です。
 
 ArgoCD のデプロイメントが起動するまで待ちます：
 
