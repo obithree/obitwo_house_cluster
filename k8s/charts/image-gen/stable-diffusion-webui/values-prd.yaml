@@ -1,0 +1,16 @@
+replicaCount: 1
+
+image:
+  repository: lscr.io/linuxserver/stable-diffusion-webui
+  tag: latest
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    nvidia.com/gpu: 1
+
+env:
+  - name: CLI_ARGS
+    value: "--api --listen"
+  - name: DOCKER_MODS
+    value: "linuxserver/mods:stable-diffusion-webui-api"
