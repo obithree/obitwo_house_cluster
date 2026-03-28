@@ -16,6 +16,63 @@ spec:
       labels:
         app: ollama
     spec:
+      {{- if .Values.models }}
+      initContainers:
+      - name: model-downloader
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        command:
+          - /bin/sh
+          - -c
+          - |
+            set -e
+
+            # Ollamaサーバーをバックグラウンドで起動
+            echo "Starting Ollama server for model download..."
+            ollama serve &
+            OLLAMA_PID=$!
+
+            # サーバーが起動するまで待機
+            for i in $(seq 1 60); do
+              if curl -s http://localhost:11434 > /dev/null 2>&1; then
+                echo "Ollama server is ready!"
+                break
+              fi
+              echo "Waiting for server... ($i/60)"
+              sleep 2
+            done
+
+            # 各モデルをダウンロード
+            {{- range .Values.models }}
+            echo "Checking model: {{ . }}"
+            if ollama list | grep -q "{{ . }}"; then
+              echo "Model {{ . }} already exists, skipping..."
+            else
+              echo "Pulling model {{ . }}..."
+              ollama pull {{ . }}
+              echo "Model {{ . }} installed successfully!"
+            fi
+            {{- end }}
+
+            echo "All models ready!"
+            kill $OLLAMA_PID || true
+            wait $OLLAMA_PID || true
+        # GPU不要のためNVIDIA hooksを無効化
+        env:
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: "none"
+        volumeMounts:
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          mountPath: /root/.ollama
+        {{- end }}
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "100m"
+          limits:
+            memory: "2Gi"
+            cpu: "500m"
+      {{- end }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"

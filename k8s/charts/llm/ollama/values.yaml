@@ -34,7 +34,8 @@ gpu:
 
 env: []
 
-# モデルのリスト（Pod起動時に自動ダウンロード）
+# インストールするモデルのリスト
 models: []
+  # - gemma3:4b
   # - mistral
-  # - neural-chat
+  # - qwen3.5:9b

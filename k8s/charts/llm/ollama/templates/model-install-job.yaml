@@ -1,4 +1,5 @@
-{{- if .Values.modelInstallJob.enabled }}
+{{- /* Job方式は廃止。initContainerに移行済み。 */}}
+{{- if false }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -6,6 +7,9 @@ metadata:
   labels:
     app: ollama
     job: model-install
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   ttlSecondsAfterFinished: 86400  # 24時間後に自動削除
   template:

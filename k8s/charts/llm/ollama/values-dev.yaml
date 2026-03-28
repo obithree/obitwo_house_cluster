@@ -22,17 +22,8 @@ resources:
 gpu:
   enabled: true
 
-# 開発環境では軽量モデルをダウンロード
-# VRAM 8GB推奨: gemma3:2b (最新・軽量・高速)
-# 起動時の自動ダウンロードは無効化
-models: []
-
-# モデルインストールJob設定
-# バージョンを変更すると新しいJobが作成される
-modelInstallJob:
-  enabled: true
-  version: "v1"
-  models:
-    - gemma3:4b
-    - mistral
-    - qwen3.5:9b
+# インストールするモデルのリスト
+models:
+  - gemma3:4b
+  - mistral
+  - qwen3.5:9b
