@@ -68,39 +68,39 @@
   become: yes
   when: chrome_repo_check.rc != 0
 
-# # VSCode のインストール (Snap)
-# - name: VSCode をインストール (snap)
-#   community.general.snap:
-#     name: code
-#     classic: yes
-#     state: present
-#   become: yes
+# VSCode のインストール (Snap)
+- name: VSCode をインストール (snap)
+  community.general.snap:
+    name: code
+    classic: yes
+    state: present
+  become: yes
 
-# # Steam のインストール (Snap)
-# - name: 32bit アーキテクチャの有効状態を確認
-#   ansible.builtin.shell: dpkg --print-foreign-architectures | grep -q i386
-#   register: i386_check
-#   changed_when: false
-#   failed_when: false
+# Steam のインストール (Snap)
+- name: 32bit アーキテクチャの有効状態を確認
+  ansible.builtin.shell: dpkg --print-foreign-architectures | grep -q i386
+  register: i386_check
+  changed_when: false
+  failed_when: false
 
-# - name: 32bit アーキテクチャを有効化 (Steamなど32bitゲーム環境用)
-#   ansible.builtin.command: dpkg --add-architecture i386
-#   become: yes
-#   when: i386_check.rc != 0
-#   register: i386_added
+- name: 32bit アーキテクチャを有効化 (Steamなど32bitゲーム環境用)
+  ansible.builtin.command: dpkg --add-architecture i386
+  become: yes
+  when: i386_check.rc != 0
+  register: i386_added
 
-# - name: Steam をインストール (snap)
-#   community.general.snap:
-#     name: steam
-#     state: present
-#   become: yes
+- name: Steam をインストール (snap)
+  community.general.snap:
+    name: steam
+    state: present
+  become: yes
 
-# # Discord のインストール (Snap)
-# - name: Discord をインストール (snap)
-#   community.general.snap:
-#     name: discord
-#     state: present
-#   become: yes
+# Discord のインストール (Snap)
+- name: Discord をインストール (snap)
+  community.general.snap:
+    name: discord
+    state: present
+  become: yes
 
 # NVIDIA ドライバーのインストール
 - name: ubuntu-drivers-common をインストール
