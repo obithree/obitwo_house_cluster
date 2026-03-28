@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: lscr.io/linuxserver/stable-diffusion-webui
-  tag: latest
+  repository: siutin/stable-diffusion-webui-docker
+  tag: default-cuda-latest
   pullPolicy: IfNotPresent
 
 resources:

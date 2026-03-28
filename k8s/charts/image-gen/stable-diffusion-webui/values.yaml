@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: lscr.io/linuxserver/stable-diffusion-webui
-  tag: latest # CPU by default, GPU requires specific tags or settings
+  repository: siutin/stable-diffusion-webui-docker
+  tag: default-cpu-latest
   pullPolicy: IfNotPresent
 
 nameOverride: ""
