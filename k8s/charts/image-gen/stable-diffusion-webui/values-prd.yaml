@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: siutin/stable-diffusion-webui-docker
-  tag: default-cuda-latest
+  tag: latest-cuda-12.8.1
   pullPolicy: IfNotPresent
 
 resources:
