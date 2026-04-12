@@ -1,0 +1,26 @@
+---
+- name: k3s server の API ポートが開くまで待機
+  wait_for:
+    host: "{{ hostvars[groups['raspi-master'][0]]['ansible_host'] | default(groups['raspi-master'][0]) }}"
+    port: 6443
+    timeout: 120
+  tags: k3s
+
+- name: k3s エージェントをインストール
+  shell: |
+    curl -sfL https://get.k3s.io | \
+      INSTALL_K3S_VERSION="{{ k3s_version }}" \
+      K3S_URL="{{ k3s_server_url }}" \
+      K3S_TOKEN="{{ hostvars[groups['raspi-master'][0]]['k3s_node_token'] }}" \
+      INSTALL_K3S_EXEC="agent --node-label node-type=raspi" \
+      sh -
+  args:
+    creates: /usr/local/bin/k3s
+  tags: k3s
+
+- name: k3s-agent サービスを有効化・起動
+  systemd:
+    name: k3s-agent
+    enabled: yes
+    state: started
+  tags: k3s

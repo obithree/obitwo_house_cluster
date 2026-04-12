@@ -1,0 +1,61 @@
+---
+- name: k3s サーバーをインストール
+  shell: |
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" sh -
+  args:
+    creates: /usr/local/bin/k3s
+  tags: k3s
+
+- name: k3s サービスを有効化・起動
+  systemd:
+    name: k3s
+    enabled: yes
+    state: started
+  tags: k3s
+
+- name: kubectl 用 kubeconfig ディレクトリを作成
+  file:
+    path: "/home/{{ default_user }}/.kube"
+    state: directory
+    mode: '0700'
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+  tags: k3s
+
+- name: kubeconfig を default_user にコピー
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "/home/{{ default_user }}/.kube/config"
+    remote_src: yes
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    mode: '0600'
+  tags: k3s
+
+- name: kubeconfig の server アドレスをローカルホストに修正
+  replace:
+    path: "/home/{{ default_user }}/.kube/config"
+    regexp: 'https://127\.0\.0\.1:6443'
+    replace: "{{ k3s_server_url }}"
+  tags: k3s
+
+- name: k9s をインストール
+  unarchive:
+    src: "https://github.com/derailed/k9s/releases/download/{{ k9s_version }}/k9s_Linux_arm64.tar.gz"
+    dest: /usr/local/bin
+    remote_src: yes
+    include:
+      - k9s
+    mode: '0755'
+  tags: k9s
+
+- name: node-token を取得
+  slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: k3s_token_raw
+  tags: k3s
+
+- name: node-token を facts に保存
+  set_fact:
+    k3s_node_token: "{{ k3s_token_raw.content | b64decode | trim }}"
+  tags: k3s
