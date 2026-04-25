@@ -6,6 +6,9 @@ image:
 
 replicaCount: 1
 
+nodeSelector:
+  node-role: worker
+
 service:
   type: NodePort
   dns:
@@ -17,7 +20,7 @@ service:
 
 persistence:
   enabled: true
-  storageClass: "standard"
+  storageClass: "local-path"
   size: 5Gi
 
 env:

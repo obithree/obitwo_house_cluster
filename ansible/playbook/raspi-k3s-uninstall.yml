@@ -1,0 +1,20 @@
+---
+- name: k3s agent アンインストール (worker)
+  hosts: raspi-worker
+  become: yes
+  tasks:
+    - name: k3s-agent アンインストールスクリプトを実行
+      shell: /usr/local/bin/k3s-agent-uninstall.sh
+      args:
+        removes: /usr/local/bin/k3s-agent-uninstall.sh
+      ignore_errors: yes
+
+- name: k3s server アンインストール (master)
+  hosts: raspi-master
+  become: yes
+  tasks:
+    - name: k3s サーバーアンインストールスクリプトを実行
+      shell: /usr/local/bin/k3s-uninstall.sh
+      args:
+        removes: /usr/local/bin/k3s-uninstall.sh
+      ignore_errors: yes

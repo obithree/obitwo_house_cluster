@@ -1,5 +1,9 @@
 replicaCount: 1
 
+nodeSelector:
+  node-role: worker
+  node-type: pc
+
 image:
   repository: ghcr.io/open-webui/open-webui
   pullPolicy: IfNotPresent

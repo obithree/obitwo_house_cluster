@@ -1,0 +1,26 @@
+---
+- name: k3s server の API ポートが開くまで待機
+  wait_for:
+    host: "{{ k3s_master_host }}"
+    port: 6443
+    timeout: 120
+  tags: k3s
+
+- name: k3s エージェントをインストール (PC)
+  shell: |
+    curl -sfL https://get.k3s.io | \
+      INSTALL_K3S_VERSION="{{ k3s_version }}" \
+      K3S_URL="https://{{ k3s_master_host }}:6443" \
+      K3S_TOKEN="{{ k3s_node_token }}" \
+      INSTALL_K3S_EXEC="agent --node-label node-role=worker --node-label node-type=pc" \
+      sh -
+  args:
+    creates: /usr/local/bin/k3s
+  tags: k3s
+
+- name: k3s-agent サービスを有効化・起動
+  systemd:
+    name: k3s-agent
+    enabled: yes
+    state: started
+  tags: k3s

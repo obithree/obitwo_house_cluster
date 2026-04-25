@@ -1,0 +1,14 @@
+---
+- name: cgroup 設定 (共通)
+  include_tasks: cgroup.yml
+
+- name: cgroup 変更を即時反映 (reboot)
+  meta: flush_handlers
+
+- name: k3s server セットアップ
+  include_tasks: server.yml
+  when: inventory_hostname in groups['raspi-master']
+
+- name: k3s agent セットアップ
+  include_tasks: agent.yml
+  when: inventory_hostname in groups['raspi-worker']

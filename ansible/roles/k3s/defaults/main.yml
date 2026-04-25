@@ -1,0 +1,5 @@
+---
+k3s_version: "v1.32.3+k3s1"
+k3s_server_url: "https://{{ hostvars[groups['raspi-master'][0]]['ansible_host'] | default(groups['raspi-master'][0]) }}:6443"
+k9s_version: "v0.32.7"
+default_user: "obitwo"

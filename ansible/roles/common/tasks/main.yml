@@ -1,8 +1,9 @@
 ---
-# - name: ホスト名を設定
-#   hostname:
-#     name: "{{ hostname }}"
-#   tags: hostname
+- name: ホスト名を設定
+  hostname:
+    name: "{{ hostname }}"
+  when: hostname is defined
+  tags: hostname
 
 # - name: ロケールを生成
 #   community.general.locale_gen:
@@ -99,7 +100,7 @@
   notify: restart ssh
   tags: ssh
 
-- name: SSH 設定 - KbdInteractiveAuthentication を無効化 (新しいOpenSSH)
+- name: SSH 設定 - KbdInteractiveAuthentication を無効化 (OpenSSH 8.7以降)
   lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^#?KbdInteractiveAuthentication'
