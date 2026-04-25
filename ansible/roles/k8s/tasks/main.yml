@@ -35,9 +35,16 @@
     state: present
   tags: install
 
+- name: keyringsディレクトリを作成
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  tags: install
+
 - name: Kubernetes GPGキーを追加
   shell: |
-    curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/kubernetes-archive-keyring.gpg
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
   args:
     warn: no
   tags: install
@@ -45,7 +52,8 @@
 - name: Kubernetesリポジトリを追加
   lineinfile:
     path: /etc/apt/sources.list.d/kubernetes.list
-    line: "deb [signed-by=/etc/apt/trusted.gpg.d/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ $(lsb_release -cs) main"
+    line: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /"
+    create: yes
   tags: install
 
 - name: aptキャッシュを更新
