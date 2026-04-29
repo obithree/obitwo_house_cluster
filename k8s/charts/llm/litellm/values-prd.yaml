@@ -32,3 +32,15 @@ models:
     ollamaModel: gemma4:26b-a4b-it-q4_K_M
   - name: claude-3-haiku-20240307
     ollamaModel: gemma3:4b
+  # Claude Code が日付サフィックス付きで送信するモデル名
+  - name: claude-haiku-4-5-20251001
+    ollamaModel: gemma3:4b
+  - name: claude-sonnet-4-5-20251029
+    ollamaModel: gemma4:26b-a4b-it-q4_K_M
+  - name: claude-opus-4-5-20251101
+    ollamaModel: gemma4:26b-a4b-it-q4_K_M
+  # Claude Code が日付サフィックスなしで送信するモデル名
+  - name: claude-sonnet-4-6
+    ollamaModel: gemma4:26b-a4b-it-q4_K_M
+  - name: claude-opus-4-7
+    ollamaModel: gemma4:26b-a4b-it-q4_K_M
