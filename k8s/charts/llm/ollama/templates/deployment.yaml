@@ -35,7 +35,7 @@ spec:
 
             # サーバーが起動するまで待機
             for i in $(seq 1 60); do
-              if curl -s http://localhost:11434 > /dev/null 2>&1; then
+              if echo > /dev/tcp/localhost/11434 2>/dev/null; then
                 echo "Ollama server is ready!"
                 break
               fi
