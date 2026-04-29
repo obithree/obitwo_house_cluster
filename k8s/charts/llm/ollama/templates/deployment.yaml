@@ -23,7 +23,7 @@ spec:
       - name: model-downloader
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         command:
-          - /bin/sh
+          - /bin/bash
           - -c
           - |
             set -e
