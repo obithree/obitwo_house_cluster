@@ -19,6 +19,10 @@ cuda_keyring_url: "https://developer.download.nvidia.com/compute/cuda/repos/ubun
 # 開発ツールの設定
 install_dev_tools: false  # 開発ツール（CLI Tools, Docker, Docker Compose）をインストールする場合はtrue
 
+# Claude Code の設定
+claude_code_api_base_url: "http://litellm.home:30939"
+claude_code_api_key: "sk-litellm-local"
+
 # 便利なCLIツール（dev-tools.ymlで使用）
 cli_tools:
   - vim
