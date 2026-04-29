@@ -7,7 +7,7 @@ service:
   type: NodePort
 
 persistence:
-  size: 10Gi
+  size: 50Gi
 
 resources:
   requests:
@@ -27,3 +27,5 @@ models:
   - gemma3:4b
   - mistral
   - qwen3.5:9b
+  - qwen3:4b
+  - qwen3:27b

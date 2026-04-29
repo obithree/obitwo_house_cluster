@@ -21,3 +21,7 @@ resources:
 
 gpu:
   enabled: true
+
+models:
+  - gemma3:4b
+  - qwen3.6:27b
