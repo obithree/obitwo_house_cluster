@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nvidia-device-plugin-daemonset
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: nvidia-device-plugin-ds
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: nvidia-device-plugin-ds
+    spec:
+      # PC ノード (RTX 3080) のみにスケジュール
+      nodeSelector:
+        node-type: pc
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: nvidia-device-plugin-ctr
+          image: nvcr.io/nvidia/k8s-device-plugin:v0.17.0
+          env:
+            - name: FAIL_ON_INIT_ERROR
+              value: "false"
+            # nvidia runtime が GPU ライブラリをこの Pod に注入するよう指定
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: "utility"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /var/lib/kubelet/device-plugins
+            # k3s containerd ソケットを標準パスにマウント
+            # (auto 戦略が default runtime = nvidia を確認するために必要)
+            - name: containerd-sock
+              mountPath: /run/containerd/containerd.sock
+            # CDI スペックをマウント (auto 戦略の GPU 検出に使用)
+            - name: cdi-specs
+              mountPath: /etc/cdi
+      volumes:
+        - name: device-plugin
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: containerd-sock
+          hostPath:
+            path: /run/k3s/containerd/containerd.sock
+            type: Socket
+        - name: cdi-specs
+          hostPath:
+            path: /etc/cdi
+            type: DirectoryOrCreate
