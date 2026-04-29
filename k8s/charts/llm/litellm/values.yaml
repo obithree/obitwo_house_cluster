@@ -1,0 +1,51 @@
+replicaCount: 1
+
+nodeSelector:
+  node-role: worker
+  node-type: pc
+
+image:
+  repository: ghcr.io/berriai/litellm
+  pullPolicy: IfNotPresent
+  tag: "main-latest"
+
+service:
+  type: NodePort
+  port: 4000
+  targetPort: 4000
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+ingress:
+  enabled: false
+  className: nginx
+  host: litellm.home
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+
+ollama:
+  baseUrl: "http://ollama:11434"
+
+# LiteLLM master key (Claude Code の ANTHROPIC_API_KEY に設定する値)
+masterKey: "sk-litellm-local"
+
+# Claude Code が使用するモデル名 → Ollama モデルのマッピング
+models:
+  - name: claude-opus-4-5
+    ollamaModel: qwen3.6:27b
+  - name: claude-sonnet-4-5
+    ollamaModel: gemma4:26b-a4b-it-q4_K_M
+  - name: claude-haiku-3-5
+    ollamaModel: gemma3:4b
+  - name: claude-3-5-sonnet-20241022
+    ollamaModel: gemma4:26b-a4b-it-q4_K_M
+  - name: claude-3-haiku-20240307
+    ollamaModel: gemma3:4b

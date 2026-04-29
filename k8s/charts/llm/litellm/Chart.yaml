@@ -1,0 +1,6 @@
+apiVersion: v2
+name: litellm
+description: LiteLLM Proxy Helm chart - OpenAI/Anthropic compatible API proxy for local LLMs
+type: application
+version: 0.1.0
+appVersion: "main-latest"

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-config
+  labels:
+    app: litellm
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+data:
+  config.yaml: |
+    model_list:
+    {{- range .Values.models }}
+      - model_name: {{ .name }}
+        litellm_params:
+          model: ollama_chat/{{ .ollamaModel }}
+          api_base: {{ $.Values.ollama.baseUrl }}
+    {{- end }}
+    litellm_settings:
+      drop_params: true
+      num_retries: 3
+      request_timeout: 600
