@@ -17,5 +17,6 @@ data:
     {{- end }}
     litellm_settings:
       drop_params: true
+      modify_params: true
       num_retries: 3
       request_timeout: 600
