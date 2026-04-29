@@ -13,24 +13,11 @@
       set_fact:
         k3s_node_token: "{{ k3s_token_raw.content | b64decode | trim }}"
 
-# フェーズ2: PC に cgroup 設定と k3s agent をインストール
+# フェーズ2: PC に k3s agent をインストール
 - name: PC を k3s クラスターに追加
   hosts: pc
   become: yes
-  vars:
-    k3s_version: "v1.32.3+k3s1"
-    k3s_master_host: "{{ hostvars[groups['raspi-master'][0]]['ansible_host'] }}"
-    k3s_node_token: "{{ hostvars[groups['raspi-master'][0]]['k3s_node_token'] }}"
 
   roles:
     - common
-
-  tasks:
-    - name: cgroup 設定
-      include_tasks: "{{ playbook_dir }}/../roles/k3s/tasks/cgroup.yml"
-
-    - name: cgroup 変更を即時反映 (reboot)
-      meta: flush_handlers
-
-    - name: k3s agent をインストール
-      include_tasks: "{{ playbook_dir }}/../roles/k3s/tasks/agent-pc.yml"
+    - k3s

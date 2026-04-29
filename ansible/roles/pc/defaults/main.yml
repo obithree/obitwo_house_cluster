@@ -12,6 +12,10 @@ software_packages:
 # NVIDIAドライバーの設定
 install_nvidia_driver: true  # NVIDIAドライバーをインストールする場合はtrue
 
+# CUDAの設定
+install_cuda: true  # CUDA Toolkitをインストールする場合はtrue（開発・AI・ゲーム用途）
+cuda_keyring_url: "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb"
+
 # 開発ツールの設定
 install_dev_tools: false  # 開発ツール（CLI Tools, Docker, Docker Compose）をインストールする場合はtrue
 

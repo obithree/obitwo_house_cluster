@@ -9,6 +9,10 @@
   include_tasks: server.yml
   when: inventory_hostname in groups['raspi-master']
 
-- name: k3s agent セットアップ
+- name: k3s agent セットアップ (raspi-worker)
   include_tasks: agent.yml
   when: inventory_hostname in groups['raspi-worker']
+
+- name: k3s agent セットアップ (PC)
+  include_tasks: agent-pc.yml
+  when: inventory_hostname in groups['pc']

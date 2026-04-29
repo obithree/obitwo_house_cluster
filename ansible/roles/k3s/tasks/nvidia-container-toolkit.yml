@@ -1,0 +1,65 @@
+---
+# NVIDIA Container Toolkit のインストール
+- name: NVIDIA Container Toolkit GPG キーのインストール済み確認
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+  register: nvidia_gpg_key
+
+- name: NVIDIA Container Toolkit GPG キーを追加
+  ansible.builtin.shell: |
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | \
+      gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+  when: not nvidia_gpg_key.stat.exists
+
+- name: NVIDIA Container Toolkit リポジトリのインストール済み確認
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  register: nvidia_repo
+
+- name: NVIDIA Container Toolkit リポジトリを追加
+  ansible.builtin.shell: |
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+      sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+      tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  when: not nvidia_repo.stat.exists
+
+- name: NVIDIA Container Toolkit をインストール
+  ansible.builtin.apt:
+    name: nvidia-container-toolkit
+    state: present
+    update_cache: yes
+
+# k3s の containerd に NVIDIA ランタイムを設定
+- name: k3s containerd 設定ディレクトリを作成
+  ansible.builtin.file:
+    path: /var/lib/rancher/k3s/agent/etc/containerd
+    state: directory
+    mode: '0755'
+
+- name: nvidia-ctk で k3s containerd に NVIDIA ランタイムを設定
+  ansible.builtin.command: >
+    nvidia-ctk runtime configure
+    --runtime=containerd
+    --config=/var/lib/rancher/k3s/agent/etc/containerd/config.toml
+  register: nvidia_ctk_result
+  changed_when: nvidia_ctk_result.rc == 0
+
+- name: config.toml を config.toml.tmpl としてコピー（k3s 再起動後も設定を維持するため）
+  ansible.builtin.copy:
+    src: /var/lib/rancher/k3s/agent/etc/containerd/config.toml
+    dest: /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+    remote_src: yes
+    mode: '0644'
+  notify: restart k3s-agent
+
+# CDI スペックの生成
+- name: CDI スペック出力ディレクトリを作成
+  ansible.builtin.file:
+    path: /etc/cdi
+    state: directory
+    mode: '0755'
+
+- name: CDI スペックを生成
+  ansible.builtin.command: nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+  register: cdi_generate
+  changed_when: cdi_generate.rc == 0
