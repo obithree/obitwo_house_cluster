@@ -40,6 +40,8 @@ spec:
           value: {{ .Values.masterKey | quote }}
         - name: STORE_MODEL_IN_DB
           value: "False"
+        - name: LITELLM_DISABLE_THINKING
+          value: "true"
         {{- with .Values.env }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

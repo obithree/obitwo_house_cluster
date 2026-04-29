@@ -14,9 +14,13 @@ data:
         litellm_params:
           model: ollama_chat/{{ .ollamaModel }}
           api_base: {{ $.Values.ollama.baseUrl }}
+        model_info:
+          supports_reasoning: false
     {{- end }}
     litellm_settings:
       drop_params: true
       modify_params: true
       num_retries: 3
       request_timeout: 600
+    router_settings:
+      disable_reasoning: true
