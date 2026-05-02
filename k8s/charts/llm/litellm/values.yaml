@@ -33,6 +33,11 @@ ingress:
 
 ollama:
   baseUrl: "http://ollama:11434"
+  # Ollamaに渡すパラメータ（コンテキストウィンドウ拡大が最も効果的）
+  options:
+    num_ctx: 32768      # デフォルト2048から拡大。システムプロンプト切れを防ぐ
+    temperature: 0.6    # 低めにして指示追従性を向上
+    num_predict: 8192   # 最大出力トークン数
 
 # LiteLLM master key (Claude Code の ANTHROPIC_API_KEY に設定する値)
 masterKey: "sk-litellm-local"
@@ -44,14 +49,14 @@ models:
   - name: claude-sonnet-4-5
     ollamaModel: gemma4:26b-a4b-it-q4_K_M
   - name: claude-haiku-3-5
-    ollamaModel: gemma3:4b
+    ollamaModel: qwen3.6:27b
   - name: claude-3-5-sonnet-20241022
     ollamaModel: gemma4:26b-a4b-it-q4_K_M
   - name: claude-3-haiku-20240307
-    ollamaModel: gemma3:4b
+    ollamaModel: qwen3.6:27b
   # Claude Code が日付サフィックス付きで送信するモデル名
   - name: claude-haiku-4-5-20251001
-    ollamaModel: gemma3:4b
+    ollamaModel: qwen3.6:27b
   - name: claude-sonnet-4-5-20251029
     ollamaModel: gemma4:26b-a4b-it-q4_K_M
   - name: claude-opus-4-5-20251101

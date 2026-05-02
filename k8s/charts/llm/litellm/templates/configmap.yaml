@@ -16,6 +16,8 @@ data:
           api_base: {{ $.Values.ollama.baseUrl }}/v1
           api_key: ollama
           drop_params: true
+          extra_body:
+            {{- toYaml $.Values.ollama.options | nindent 12 }}
         model_info:
           supports_reasoning: false
     {{- end }}
