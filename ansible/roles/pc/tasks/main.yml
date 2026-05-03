@@ -106,76 +106,11 @@
     state: present
   become: yes
 
-# NVIDIA ドライバーのインストール
-- name: ubuntu-drivers-common をインストール
-  ansible.builtin.apt:
-    name: ubuntu-drivers-common
-    state: present
-  become: yes
-
-- name: NVIDIA GPU の検出
-  ansible.builtin.command: ubuntu-drivers devices
-  register: nvidia_devices
-  become: yes
-  changed_when: false
-  failed_when: false
-
-- name: NVIDIA GPU が検出されたか確認
-  ansible.builtin.debug:
-    msg: "{{ nvidia_devices.stdout }}"
-  when: nvidia_devices.stdout != ""
-
-- name: 推奨される NVIDIA ドライバーを自動インストール
-  ansible.builtin.command: ubuntu-drivers autoinstall
-  become: yes
-  when: "'nvidia' in nvidia_devices.stdout.lower()"
-  register: nvidia_install
-  changed_when: "'Setting up' in nvidia_install.stdout"
-
-- name: NVIDIA ドライバーのインストール状態を確認
-  ansible.builtin.debug:
-    msg: "NVIDIA ドライバーがインストールされました。システムを再起動してください。"
-  when: "'nvidia' in nvidia_devices.stdout.lower()"
-
-- name: NVIDIA GPU が見つからない場合の通知
-  ansible.builtin.debug:
-    msg: "NVIDIA GPUが検出されませんでした。ドライバーのインストールをスキップします。"
-  when: "'nvidia' not in nvidia_devices.stdout.lower()"
-
-# CUDA Toolkit のインストール
-- name: CUDA Toolkit のインストールをスキップ (GPU なし)
-  ansible.builtin.debug:
-    msg: "NVIDIA GPUが検出されなかったため、CUDA Toolkitのインストールをスキップします。"
-  when: "'nvidia' not in nvidia_devices.stdout.lower() or not install_cuda | default(true)"
-
-- name: CUDA キーリングパッケージを取得
-  ansible.builtin.get_url:
-    url: "{{ cuda_keyring_url }}"
-    dest: /tmp/cuda-keyring.deb
-    mode: '0644'
-  become: yes
-  when: "'nvidia' in nvidia_devices.stdout.lower() and install_cuda | default(true)"
-
-- name: CUDA キーリングパッケージをインストール
-  ansible.builtin.apt:
-    deb: /tmp/cuda-keyring.deb
-    state: present
-  become: yes
-  when: "'nvidia' in nvidia_devices.stdout.lower() and install_cuda | default(true)"
-  register: cuda_keyring_installed
-
-- name: CUDA Toolkit をインストール
-  ansible.builtin.apt:
-    name: cuda-toolkit
-    state: present
-    update_cache: yes
-  become: yes
-  when: "'nvidia' in nvidia_devices.stdout.lower() and install_cuda | default(true)"
-
-- name: CUDA Toolkit インストール完了メッセージ
-  ansible.builtin.debug:
-    msg: "CUDA Toolkitがインストールされました。PATH に /usr/local/cuda/bin を追加してください。"
-  when: "'nvidia' in nvidia_devices.stdout.lower() and install_cuda | default(true)"
+# NVIDIA ドライバー・CUDA のインストール
+- name: NVIDIA ドライバー・CUDA のインストール
+  ansible.builtin.import_tasks: nvidia.yml
+  when: install_nvidia_driver | default(true)
+  tags: nvidia
 
 # 開発ツールのインストール
 - name: 開発ツールのインストール
