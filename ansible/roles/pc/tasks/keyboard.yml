@@ -1,0 +1,40 @@
+---
+- name: キーボードレイアウトの現在の設定を確認
+  ansible.builtin.shell: grep -E '^XKBLAYOUT=' /etc/default/keyboard || echo 'XKBLAYOUT='
+  register: current_keyboard_layout
+  changed_when: false
+  failed_when: false
+  become: yes
+
+- name: キーボードレイアウトを設定 (日本語)
+  ansible.builtin.lineinfile:
+    path: /etc/default/keyboard
+    regexp: '^XKBLAYOUT='
+    line: 'XKBLAYOUT=jp'
+  when: "'XKBLAYOUT=jp' not in current_keyboard_layout.stdout"
+  become: yes
+
+- name: dconf モジュールの依存パッケージ python3-psutil をインストール
+  ansible.builtin.apt:
+    name: python3-psutil
+    state: present
+  become: yes
+
+- name: GNOME キーボードソースに日本語レイアウトを設定
+  become: yes
+  become_user: "{{ default_user }}"
+  community.general.dconf:
+    key: /org/gnome/desktop/input-sources/sources
+    value: "[('xkb', 'jp'), ('ibus', 'mozc-jp')]"
+    state: present
+
+- name: IBus 環境変数を /etc/profile.d/ に設定
+  ansible.builtin.copy:
+    dest: /etc/profile.d/ibus.sh
+    content: |
+      # IBus 環境変数設定
+      export GTK_IM_MODULE=ibus
+      export QT_IM_MODULE=ibus
+      export XMODIFIERS=@im=ibus
+    mode: '0644'
+  become: yes

@@ -1,4 +1,8 @@
 ---
+- name: キーボード・IBus設定
+  ansible.builtin.import_tasks: keyboard.yml
+  tags: keyboard
+
 - name: システムパッケージを更新
   ansible.builtin.apt:
     update_cache: yes
