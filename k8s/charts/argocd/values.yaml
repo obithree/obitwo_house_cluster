@@ -3,7 +3,7 @@
 ingress:
   enabled: true
   className: nginx
-  host: argocd.home.local
+  host: argo-cd.home
   port: 80
 
 service:

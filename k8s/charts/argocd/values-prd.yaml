@@ -4,7 +4,7 @@ ingress:
   enabled: true
   className: nginx
   # 本番環境ではドメイン名でアクセス
-  host: argocd.home.local
+  host: argo-cd.home
   port: 80
 
 service:
