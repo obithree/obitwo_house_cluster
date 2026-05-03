@@ -96,7 +96,7 @@
 - name: AI-303 の PipeWire ノード ID を取得
   ansible.builtin.shell: |
     sleep 2
-    wpctl status | grep "{{ ai303_device_name }}" | grep "vol:" | awk '{print $1}' | tr -d '.*'
+    wpctl status | grep "{{ ai303_device_name }}" | grep "vol:" | grep -oP '\b[0-9]+(?=\. {{ ai303_device_name }})'
   become: no
   register: ai303_node_id
   changed_when: false
