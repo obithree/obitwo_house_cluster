@@ -1,4 +1,4 @@
-# Pi-hole default values
+# Pi-hole production environment values
 image:
   repository: pihole/pihole
   tag: latest
@@ -30,3 +30,9 @@ env:
 adlists:
   - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
   - https://280blocker.net/files/280blocker_adblock_202602.txt
+
+customDnsRecords:
+  - domain: open-webui.home
+    ip: 192.168.100.200
+  - domain: argo-cd.home
+    ip: 192.168.100.200

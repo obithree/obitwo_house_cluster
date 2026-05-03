@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: pihole-prd
+  name: metallb-config-prd
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,13 +10,13 @@ spec:
   source:
     repoURL: https://github.com/obithree/obitwo_house_cluster.git
     targetRevision: main
-    path: k8s/charts/pihole
+    path: k8s/charts/metallb
     helm:
       valueFiles:
         - values-prd.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: pihole
+    namespace: metallb-system
   syncPolicy:
     automated:
       prune: true

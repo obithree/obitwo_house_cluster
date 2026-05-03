@@ -11,9 +11,9 @@ metadata:
 data:
   dnsmasq.conf: |
     # Custom DNS records
-    address=/argocd.home.local/10.100.116.209
-    address=/ollama.home.local/10.100.116.209
-    address=/webui.home.local/10.100.116.209
+    {{- range .Values.customDnsRecords }}
+    address=/{{ .domain }}/{{ .ip }}
+    {{- end }}
 ---
 apiVersion: v1
 kind: Service
