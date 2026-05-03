@@ -20,18 +20,27 @@ kind: Service
 metadata:
   name: pihole-dns
   namespace: pihole
+  {{- if and (eq .Values.service.dns.type "LoadBalancer") .Values.service.dns.loadBalancerIP }}
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: {{ .Values.service.dns.loadBalancerIP }}
+  {{- end }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.service.dns.type }}
   ports:
   - name: dns-udp
     port: {{ .Values.service.dns.port }}
     protocol: UDP
     targetPort: 53
+    {{- if eq .Values.service.dns.type "NodePort" }}
     nodePort: {{ .Values.service.dns.nodePort }}
+    {{- end }}
   - name: dns-tcp
     port: {{ .Values.service.dns.port }}
     protocol: TCP
     targetPort: 53
+    {{- if eq .Values.service.dns.type "NodePort" }}
+    nodePort: {{ .Values.service.dns.nodePort }}
+    {{- end }}
   selector:
     app: pihole
 ---
@@ -41,14 +50,39 @@ metadata:
   name: pihole-web
   namespace: pihole
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.service.web.type }}
   ports:
   - name: http
     port: {{ .Values.service.web.port }}
     targetPort: 80
+    {{- if eq .Values.service.web.type "NodePort" }}
     nodePort: {{ .Values.service.web.nodePort }}
+    {{- end }}
   selector:
     app: pihole
+---
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pihole-web-ingress
+  namespace: pihole
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /admin/$2
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+  - host: {{ .Values.ingress.host | quote }}
+    http:
+      paths:
+      - path: /()(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: pihole-web
+            port:
+              number: {{ .Values.service.web.port }}
+{{- end }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
