@@ -26,9 +26,6 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.service.dns.type }}
-  {{- if and (eq .Values.service.dns.type "LoadBalancer") .Values.service.dns.loadBalancerClass }}
-  loadBalancerClass: {{ .Values.service.dns.loadBalancerClass }}
-  {{- end }}
   ports:
   - name: dns-udp
     port: {{ .Values.service.dns.port }}
