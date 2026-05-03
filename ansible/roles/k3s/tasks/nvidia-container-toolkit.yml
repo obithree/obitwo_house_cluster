@@ -36,21 +36,14 @@
     state: directory
     mode: '0755'
 
-- name: nvidia-ctk で k3s containerd に NVIDIA ランタイムを設定（デフォルトランタイムとして）
+- name: nvidia-ctk で k3s containerd の config.toml.tmpl に NVIDIA ランタイムを設定（デフォルトランタイムとして）
   ansible.builtin.command: >
     nvidia-ctk runtime configure
     --runtime=containerd
-    --config=/var/lib/rancher/k3s/agent/etc/containerd/config.toml
+    --config=/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
     --set-as-default
   register: nvidia_ctk_result
   changed_when: nvidia_ctk_result.rc == 0
-
-- name: config.toml を config.toml.tmpl としてコピー（k3s 再起動後も設定を維持するため）
-  ansible.builtin.copy:
-    src: /var/lib/rancher/k3s/agent/etc/containerd/config.toml
-    dest: /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
-    remote_src: yes
-    mode: '0644'
   notify: restart k3s-agent
 
 - name: config.toml.tmpl に default_runtime_name を明示設定（imports が反映されない場合の保険）
