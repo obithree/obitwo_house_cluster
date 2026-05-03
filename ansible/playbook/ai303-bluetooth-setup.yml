@@ -1,0 +1,6 @@
+---
+- name: TEAC AI-303 Bluetooth オーディオ設定
+  hosts: localhost
+  become: no
+  roles:
+    - ai303-bluetooth

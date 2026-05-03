@@ -1,0 +1,110 @@
+---
+# デバイス名から MAC アドレスを動的取得
+- name: AI-303 の MAC アドレスをデバイス名から取得
+  ansible.builtin.shell: |
+    bluetoothctl devices | grep -i "{{ ai303_device_name }}" | awk '{print $2}'
+  become: no
+  register: ai303_mac_result
+  changed_when: false
+  failed_when: ai303_mac_result.stdout == ""
+  tags: ai303
+
+- name: 取得した MAC アドレスを変数に設定
+  ansible.builtin.set_fact:
+    ai303_mac_address: "{{ ai303_mac_result.stdout }}"
+  tags: ai303
+
+# WirePlumber の設定ディレクトリを作成
+- name: WirePlumber Bluetooth 設定ディレクトリを作成
+  ansible.builtin.file:
+    path: "{{ ai303_wireplumber_config_dir }}"
+    state: directory
+    owner: "{{ ai303_user }}"
+    group: "{{ ai303_user }}"
+    mode: "0755"
+  become: yes
+  tags: ai303
+
+# WirePlumber コーデック設定ファイルを配置
+- name: WirePlumber コーデック設定ファイルを配置
+  ansible.builtin.template:
+    src: "51-ai303-sbc.lua.j2"
+    dest: "{{ ai303_wireplumber_config_dir }}/{{ ai303_wireplumber_config_file }}"
+    owner: "{{ ai303_user }}"
+    group: "{{ ai303_user }}"
+    mode: "0644"
+  become: yes
+  notify: restart wireplumber
+  tags: ai303
+
+# AI-303 が Bluetooth でペアリング済みか確認
+- name: AI-303 のペアリング状態を確認
+  ansible.builtin.command:
+    cmd: bluetoothctl info {{ ai303_mac_address }}
+  register: bt_info
+  changed_when: false
+  failed_when: false
+  become: no
+  tags: ai303
+
+- name: AI-303 がペアリングされていない場合は警告
+  ansible.builtin.debug:
+    msg: >
+      AI-303 ({{ ai303_mac_address }}) がペアリングされていません。
+      先に手動でペアリングを行ってください: bluetoothctl pair {{ ai303_mac_address }}
+  when: "'Paired: yes' not in bt_info.stdout"
+  tags: ai303
+
+# WirePlumber の再起動が必要な場合はここで flush
+- name: ハンドラーを即時実行（設定ファイル変更後に再起動を確定）
+  ansible.builtin.meta: flush_handlers
+  tags: ai303
+
+# AI-303 を切断して再接続（コーデックネゴシエーションのリセット）
+- name: AI-303 の Bluetooth 接続状態を確認
+  ansible.builtin.command:
+    cmd: bluetoothctl info {{ ai303_mac_address }}
+  register: bt_status
+  changed_when: false
+  failed_when: false
+  become: no
+  tags: ai303
+
+- name: AI-303 を切断して再接続（接続中の場合）
+  ansible.builtin.shell: |
+    bluetoothctl disconnect {{ ai303_mac_address }}
+    sleep 2
+    bluetoothctl connect {{ ai303_mac_address }}
+  become: no
+  when: "'Connected: yes' in bt_status.stdout"
+  register: bt_reconnect
+  failed_when: "'Connection successful' not in bt_reconnect.stdout"
+  tags: ai303
+
+- name: AI-303 に接続（未接続の場合）
+  ansible.builtin.command:
+    cmd: bluetoothctl connect {{ ai303_mac_address }}
+  become: no
+  when:
+    - "'Paired: yes' in bt_info.stdout"
+    - "'Connected: yes' not in bt_status.stdout"
+  register: bt_connect
+  failed_when: "'Connection successful' not in bt_connect.stdout"
+  tags: ai303
+
+# AI-303 を PipeWire のデフォルト出力デバイスに設定
+- name: AI-303 の PipeWire ノード ID を取得
+  ansible.builtin.shell: |
+    sleep 2
+    wpctl status | grep "{{ ai303_device_name }}" | grep "vol:" | awk '{print $1}' | tr -d '.*'
+  become: no
+  register: ai303_node_id
+  changed_when: false
+  failed_when: ai303_node_id.stdout == ""
+  tags: ai303
+
+- name: AI-303 をデフォルト出力デバイスに設定
+  ansible.builtin.command:
+    cmd: wpctl set-default {{ ai303_node_id.stdout }}
+  become: no
+  tags: ai303

@@ -1,0 +1,6 @@
+-- TEAC AI-303 Bluetooth オーディオ設定
+-- WirePlumber 用 Bluetooth コーデック設定
+--
+-- LDAC は A2DP トランスポートエラーを引き起こすため除外し、
+-- SBC / SBC XQ / AAC / aptX / aptX HD を使用する。
+bluez_monitor.properties["bluez5.codecs"] = "{{ ai303_a2dp_codecs }}"

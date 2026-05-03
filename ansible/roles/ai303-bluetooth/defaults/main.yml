@@ -1,0 +1,13 @@
+---
+# TEAC AI-303 Bluetooth オーディオ設定
+ai303_device_name: "AI-303"
+
+# 対象ユーザー（WirePlumber はユーザーレベルのサービス）
+ai303_user: "{{ ansible_user | default('obitwo') }}"
+
+# WirePlumber 設定ファイルのパス
+ai303_wireplumber_config_dir: "/home/{{ ai303_user }}/.config/wireplumber/bluetooth.lua.d"
+ai303_wireplumber_config_file: "51-ai303-sbc.lua"
+
+# 有効にする A2DP コーデック（LDAC はトランスポートエラーが発生するため除外）
+ai303_a2dp_codecs: "[ sbc sbc_xq aac aptx aptx_hd ]"

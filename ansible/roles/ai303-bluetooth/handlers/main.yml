@@ -1,0 +1,8 @@
+---
+# WirePlumber をユーザーサービスとして再起動
+- name: restart wireplumber
+  ansible.builtin.systemd:
+    name: wireplumber
+    state: restarted
+    scope: user
+  become: no
