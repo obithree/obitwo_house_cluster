@@ -12,21 +12,15 @@ data:
     {{- range .Values.models }}
       - model_name: {{ .name }}
         litellm_params:
-          model: openai/{{ .ollamaModel }}
-          api_base: {{ $.Values.ollama.baseUrl }}/v1
-          api_key: ollama
-          drop_params: true
+          model: ollama_chat/{{ .ollamaModel }}
+          api_base: {{ $.Values.ollama.baseUrl }}
           extra_body:
-            {{- toYaml $.Values.ollama.options | nindent 12 }}
+            options:
+              {{- toYaml $.Values.ollama.options | nindent 14 }}
         model_info:
-          supports_reasoning: false
+          supports_reasoning: true
     {{- end }}
     litellm_settings:
-      drop_params: true
       modify_params: true
       num_retries: 3
       request_timeout: 600
-      default_litellm_params:
-        drop_params: true
-    router_settings:
-      disable_reasoning: true
