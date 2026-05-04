@@ -22,8 +22,8 @@ service:
 
 ingress:
   enabled: true
-  className: traefik
-  host: pihole.home
+  className: tailscale
+  host: pihole
 
 persistence:
   enabled: true

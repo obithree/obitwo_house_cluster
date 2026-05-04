@@ -4,6 +4,7 @@ external-dns:
   extraArgs:
     - --pihole-server=http://pihole-web.pihole.svc.cluster.local
     - --pihole-password=admin123
+    - --pihole-tls-skip-verify
   sources:
     - ingress
   domainFilters:

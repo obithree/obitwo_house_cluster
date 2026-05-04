@@ -2,13 +2,12 @@
 
 ingress:
   enabled: true
-  className: traefik
-  host: argo-cd.home
+  className: tailscale
+  host: argocd
   port: 80
 
 service:
   name: argocd-server
   port: 80
 
-annotations:
-  nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+annotations: {}

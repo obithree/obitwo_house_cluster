@@ -67,16 +67,14 @@ kind: Ingress
 metadata:
   name: pihole-web-ingress
   namespace: pihole
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /admin/$2
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
   - host: {{ .Values.ingress.host | quote }}
     http:
       paths:
-      - path: /()(.*)
-        pathType: ImplementationSpecific
+      - path: /
+        pathType: Prefix
         backend:
           service:
             name: pihole-web

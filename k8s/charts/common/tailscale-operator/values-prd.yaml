@@ -1,0 +1,33 @@
+# Tailscale Kubernetes Operator - production values
+#
+# 事前準備:
+# 1. Tailscale Admin Console (https://login.tailscale.com/admin/settings/oauth) でOAuthクライアントを作成
+#    - Scope: devices:write
+#    - Tag: tag:k8s-operator (ACLで定義必要)
+# 2. ACLにtagを追加:
+#    "tagOwners": { "tag:k8s-operator": ["autogroup:admin"] }
+# 3. 取得した認証情報をSecretとして手動作成（gitには含めない）:
+#    kubectl create namespace tailscale
+#    kubectl create secret generic tailscale-operator-oauth \
+#      --namespace tailscale \
+#      --from-literal=client_id='<YOUR_CLIENT_ID>' \
+#      --from-literal=client_secret='<YOUR_CLIENT_SECRET>'
+
+tailscale-operator:
+  # oauth.clientId / clientSecret は直接設定しない
+  # 代わりに事前作成したSecretを参照する
+  oauth:
+    clientId: ""
+    clientSecret: ""
+  # 上記の代わりにexistingSecretを使用
+  # Secretのキー名: client_id, client_secret
+  # ref: https://tailscale.com/kb/1236/kubernetes-operator#oauth-client
+  existingSecret: tailscale-operator-oauth
+
+  operatorConfig:
+    defaultTags:
+      - "tag:k8s-operator"
+    hostname: tailscale-operator
+
+  nodeSelector:
+    node-role: worker

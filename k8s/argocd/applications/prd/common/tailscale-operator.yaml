@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: external-dns-prd
+  name: tailscale-operator-prd
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,16 +10,23 @@ spec:
   source:
     repoURL: https://github.com/obithree/obitwo_house_cluster.git
     targetRevision: main
-    path: k8s/charts/common/external-dns
+    path: k8s/charts/common/tailscale-operator
     helm:
       valueFiles:
         - values-prd.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: common
+    namespace: tailscale
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+  # Secretのdata（認証情報）は手動管理のため差分検知から除外する
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: tailscale-operator-oauth
+      jsonPointers:
+        - /data
