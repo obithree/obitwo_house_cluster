@@ -1,27 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nginx-ingress-prd
+  name: metallb-config-prd
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://kubernetes.github.io/ingress-nginx
-    targetRevision: 4.9.0
-    chart: ingress-nginx
+    repoURL: https://github.com/obithree/obitwo_house_cluster.git
+    targetRevision: main
+    path: k8s/charts/common/metallb
     helm:
-      releaseName: ingress-nginx
-      values: |
-        controller:
-          nodeSelector:
-            node-role: worker
-          service:
-            type: LoadBalancer
+      valueFiles:
+        - values-prd.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: ingress-nginx
+    namespace: common
   syncPolicy:
     automated:
       prune: true

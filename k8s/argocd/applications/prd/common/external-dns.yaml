@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: metallb-config-prd
+  name: external-dns-prd
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/obithree/obitwo_house_cluster.git
     targetRevision: main
-    path: k8s/charts/common/metallb
+    path: k8s/charts/common/external-dns
     helm:
       valueFiles:
         - values-prd.yaml

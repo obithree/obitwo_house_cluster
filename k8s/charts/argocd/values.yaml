@@ -2,7 +2,7 @@
 
 ingress:
   enabled: true
-  className: nginx
+  className: traefik
   host: argo-cd.home
   port: 80
 

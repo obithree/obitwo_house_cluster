@@ -33,7 +33,7 @@ ollama:
 
 ingress:
   enabled: true
-  className: nginx
+  className: traefik
   host: open-webui.home
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "0"

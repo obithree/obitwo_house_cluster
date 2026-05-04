@@ -1,0 +1,15 @@
+external-dns:
+  provider:
+    name: pihole
+  extraArgs:
+    - --pihole-server=http://pihole-web.pihole.svc.cluster.local
+    - --pihole-password=admin123
+  sources:
+    - ingress
+  domainFilters:
+    - home
+  policy: sync
+  txtOwnerId: external-dns-prd
+  interval: 1m
+  nodeSelector:
+    node-role: worker

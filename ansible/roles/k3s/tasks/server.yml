@@ -9,7 +9,7 @@
     creates: /usr/local/bin/k3s
   tags: k3s
 
-- name: k3s ServiceLB を無効化 (既存インストール向け)
+- name: k3s ServiceLB と Traefik を無効化 (既存インストール向け)
   lineinfile:
     path: /etc/rancher/k3s/config.yaml
     line: 'disable: [servicelb]'

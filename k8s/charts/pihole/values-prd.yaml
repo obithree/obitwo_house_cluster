@@ -22,7 +22,7 @@ service:
 
 ingress:
   enabled: true
-  className: nginx
+  className: traefik
   host: pihole.home
 
 persistence:
@@ -37,11 +37,3 @@ env:
 adlists:
   - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
   - https://280blocker.net/files/280blocker_adblock_202602.txt
-
-customDnsRecords:
-  - domain: open-webui.home
-    ip: 192.168.100.200
-  - domain: argo-cd.home
-    ip: 192.168.100.200
-  - domain: pihole.home
-    ip: 192.168.100.200
