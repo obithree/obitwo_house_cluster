@@ -24,6 +24,8 @@ ingress:
   enabled: true
   className: tailscale
   host: pihole
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
 
 persistence:
   enabled: true

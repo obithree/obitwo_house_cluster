@@ -24,4 +24,5 @@ ingress:
   enabled: true
   className: tailscale
   host: open-webui
-  annotations: {}
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies

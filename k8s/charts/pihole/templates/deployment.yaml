@@ -67,6 +67,10 @@ kind: Ingress
 metadata:
   name: pihole-web-ingress
   namespace: pihole
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:

@@ -10,4 +10,5 @@ service:
   name: argocd-server
   port: 80
 
-annotations: {}
+annotations:
+  tailscale.com/proxy-group: ingress-proxies
