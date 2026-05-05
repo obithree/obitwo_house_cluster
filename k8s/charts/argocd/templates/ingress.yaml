@@ -34,5 +34,3 @@ spec:
               number: {{ .Values.ingress.port }}
   {{- end }}
 {{- end }}
-  {{- end }}
-{{- end }}
