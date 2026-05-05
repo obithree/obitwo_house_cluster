@@ -3,8 +3,7 @@
 ingress:
   enabled: true
   className: traefik
-  # 開発環境では全ホストを受け付ける（ホスト指定なし）
-  host: ~
+  host: argo-cd.home
   port: 80
 
 service:

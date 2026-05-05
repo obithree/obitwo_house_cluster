@@ -74,6 +74,17 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
+  {{- if eq .Values.ingress.className "tailscale" }}
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pihole-web
+            port:
+              number: {{ .Values.service.web.port }}
+  {{- else }}
   - host: {{ .Values.ingress.host | quote }}
     http:
       paths:
@@ -84,6 +95,7 @@ spec:
             name: pihole-web
             port:
               number: {{ .Values.service.web.port }}
+  {{- end }}
 {{- end }}
 ---
 apiVersion: v1

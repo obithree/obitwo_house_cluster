@@ -12,6 +12,17 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
+  {{- if eq .Values.ingress.className "tailscale" }}
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: litellm
+            port:
+              number: {{ .Values.service.port }}
+  {{- else }}
   - host: {{ .Values.ingress.host | quote }}
     http:
       paths:
@@ -22,4 +33,5 @@ spec:
             name: litellm
             port:
               number: {{ .Values.service.port }}
+  {{- end }}
 {{- end }}

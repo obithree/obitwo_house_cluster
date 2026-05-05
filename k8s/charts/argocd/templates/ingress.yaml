@@ -11,21 +11,17 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
-  {{- if .Values.ingress.hosts }}
-  {{- range .Values.ingress.hosts }}
-  - host: {{ .host | quote }}
-    http:
+  {{- if eq .Values.ingress.className "tailscale" }}
+  - http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: {{ .service }}
+            name: {{ .Values.service.name }}
             port:
-              number: {{ .port }}
-  {{- end }}
-  {{- else if and .Values.ingress.host (ne .Values.ingress.host "~") }}
-  # ホストを指定する場合
+              number: {{ .Values.ingress.port }}
+  {{- else }}
   - host: {{ .Values.ingress.host | quote }}
     http:
       paths:
@@ -36,16 +32,7 @@ spec:
             name: {{ .Values.service.name }}
             port:
               number: {{ .Values.ingress.port }}
-  {{- else }}
-  # ホスト指定なし - すべてのホストを受け付ける（開発環境用）
-  - http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: {{ .Values.service.name }}
-            port:
-              number: {{ .Values.ingress.port }}
+  {{- end }}
+{{- end }}
   {{- end }}
 {{- end }}
