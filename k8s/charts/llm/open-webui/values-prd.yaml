@@ -26,3 +26,4 @@ ingress:
   host: open-webui
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    tailscale.com/hostname: open-webui
