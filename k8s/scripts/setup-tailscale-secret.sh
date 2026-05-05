@@ -11,7 +11,7 @@
 set -euo pipefail
 
 NAMESPACE="tailscale"
-SECRET_NAME="tailscale-operator-oauth"
+SECRET_NAME="operator-oauth"
 
 echo "=== Tailscale Operator OAuth Secret セットアップ ==="
 echo ""

@@ -37,7 +37,7 @@ Tailscale Admin Console → Access Controlsで以下を追加：
 ArgoCDがデプロイした空のSecretに、取得した認証情報を書き込む：
 
 ```bash
-kubectl patch secret tailscale-operator-oauth -n tailscale \
+kubectl patch secret operator-oauth -n tailscale \
   --type='json' \
   -p='[
     {"op":"replace","path":"/data/client_id","value":"'$(echo -n "<CLIENT_ID>" | base64)'"},

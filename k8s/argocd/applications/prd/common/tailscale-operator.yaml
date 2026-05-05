@@ -27,6 +27,6 @@ spec:
   ignoreDifferences:
     - group: ""
       kind: Secret
-      name: tailscale-operator-oauth
+      name: operator-oauth
       jsonPointers:
         - /data

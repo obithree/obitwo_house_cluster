@@ -22,7 +22,7 @@ tailscale-operator:
   # 上記の代わりにexistingSecretを使用
   # Secretのキー名: client_id, client_secret
   # ref: https://tailscale.com/kb/1236/kubernetes-operator#oauth-client
-  existingSecret: tailscale-operator-oauth
+  existingSecret: operator-oauth
 
   operatorConfig:
     defaultTags:
