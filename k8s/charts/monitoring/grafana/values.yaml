@@ -7,7 +7,9 @@ service:
   type: ClusterIP
   port: 3000
 adminUser: admin
-adminPassword: admin
+adminSecret: grafana-admin-secret
+prometheus:
+  serviceName: prometheus-prometheus
 resources:
   limits:
     cpu: 500m

@@ -23,7 +23,10 @@ spec:
             - name: GF_SECURITY_ADMIN_USER
               value: {{ .Values.adminUser | quote }}
             - name: GF_SECURITY_ADMIN_PASSWORD
-              value: {{ .Values.adminPassword | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.adminSecret }}
+                  key: admin-password
           ports:
             - containerPort: 3000
               name: http

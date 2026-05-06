@@ -10,5 +10,5 @@ data:
       - name: Prometheus
         type: prometheus
         access: proxy
-        url: http://{{ .Release.Name }}-prometheus.{{ .Release.Namespace }}.svc.cluster.local:9090
+        url: http://{{ .Values.prometheus.serviceName }}.{{ .Release.Namespace }}.svc.cluster.local:9090
         isDefault: true

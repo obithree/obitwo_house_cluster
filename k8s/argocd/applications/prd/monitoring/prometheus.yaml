@@ -3,11 +3,13 @@ kind: Application
 metadata:
   name: monitoring-prometheus
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/YOUR_USERNAME/YOUR_REPO.git'
-    targetRevision: HEAD
+    repoURL: https://github.com/obithree/obitwo_house_cluster.git
+    targetRevision: main
     path: k8s/charts/monitoring/prometheus
     helm:
       releaseName: prometheus
