@@ -33,6 +33,10 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboard-provisioning
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards
+              mountPath: /etc/grafana/dashboards
             - name: data
               mountPath: /var/lib/grafana
           resources:
@@ -41,5 +45,11 @@ spec:
         - name: config
           configMap:
             name: {{ .Release.Name }}-grafana-config
+        - name: dashboard-provisioning
+          configMap:
+            name: {{ .Release.Name }}-grafana-dashboard-provisioning
+        - name: dashboards
+          configMap:
+            name: {{ .Release.Name }}-grafana-dashboards
         - name: data
           emptyDir: {}
