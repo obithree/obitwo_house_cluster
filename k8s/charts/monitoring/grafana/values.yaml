@@ -10,6 +10,13 @@ adminUser: admin
 adminSecret: grafana-admin-secret
 prometheus:
   serviceName: prometheus-prometheus
+ingress:
+  enabled: true
+  className: tailscale
+  host: grafana
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
+    tailscale.com/hostname: grafana
 resources:
   limits:
     cpu: 500m
