@@ -16,6 +16,10 @@ resources:
 
 ingress:
   enabled: true
+  className: tailscale
+  annotations:
+    tailscale.com/hostname: "litellm"
+    tailscale.com/proxy-group: "ingress-proxies"
 
 # prd では ollama の ClusterIP サービスを参照
 ollama:
