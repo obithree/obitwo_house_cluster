@@ -8,8 +8,6 @@ service:
   port: 3000
 adminUser: admin
 adminSecret: grafana-admin-secret
-prometheus:
-  serviceName: prometheus-prometheus
 ingress:
   enabled: true
   className: tailscale
