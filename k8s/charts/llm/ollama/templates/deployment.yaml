@@ -88,6 +88,15 @@ spec:
           containerPort: {{ .Values.service.targetPort }}
           protocol: TCP
         {{- if .Values.gpu.enabled }}
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            if ! nvidia-smi > /dev/null 2>&1; then
+              echo "ERROR: GPU is not available (NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES). Refusing to start to prevent CPU fallback."
+              exit 1
+            fi
+            echo "GPU check passed. Starting ollama..."
+            exec ollama serve
         env:
         - name: NVIDIA_VISIBLE_DEVICES
           value: {{ .Values.gpu.visibleDevices | quote }}
