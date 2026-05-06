@@ -32,3 +32,10 @@ models:
   - gemma3:4b
   - qwen3.6:27b
   - gemma4:26b-a4b-it-q4_K_M
+
+ingress:
+  enabled: true
+  className: tailscale
+  annotations:
+    tailscale.com/hostname: "ollama"
+    tailscale.com/proxy-group: "ingress-proxies"

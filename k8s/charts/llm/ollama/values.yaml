@@ -43,3 +43,9 @@ models: []
   # - gemma3:4b
   # - mistral
   # - qwen3.5:9b
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: ""
