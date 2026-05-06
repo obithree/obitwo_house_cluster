@@ -1,0 +1,91 @@
+---
+# aider のインストールと設定
+
+- name: pipx をインストール
+  ansible.builtin.apt:
+    name: pipx
+    state: present
+  become: yes
+
+- name: aider がインストール済みかチェック
+  ansible.builtin.shell: |
+    export PATH="/home/{{ default_user }}/.local/bin:$PATH"
+    pipx list | grep -q aider-chat
+  register: aider_installed
+  changed_when: false
+  failed_when: false
+  become: yes
+  become_user: "{{ default_user }}"
+  environment:
+    HOME: "/home/{{ default_user }}"
+
+- name: aider-chat を pipx でインストール
+  ansible.builtin.shell: |
+    pipx install aider-chat
+  become: yes
+  become_user: "{{ default_user }}"
+  environment:
+    HOME: "/home/{{ default_user }}"
+  when: aider_installed.rc != 0
+
+- name: pipx パスを確認・追加
+  ansible.builtin.shell: |
+    pipx ensurepath
+  become: yes
+  become_user: "{{ default_user }}"
+  environment:
+    HOME: "/home/{{ default_user }}"
+  changed_when: false
+
+- name: .bashrc に aider 設定があるか確認
+  ansible.builtin.shell: grep -q 'ANSIBLE MANAGED BLOCK - aider' "/home/{{ default_user }}/.bashrc"
+  register: bashrc_aider_check
+  changed_when: false
+  failed_when: false
+  become: yes
+  become_user: "{{ default_user }}"
+
+- name: .bashrc に aider 環境変数を追加
+  ansible.builtin.blockinfile:
+    path: "/home/{{ default_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - aider"
+    block: |
+      export OLLAMA_API_BASE={{ aider_ollama_api_base_url }}
+    create: yes
+  become: yes
+  become_user: "{{ default_user }}"
+  when: bashrc_aider_check.rc != 0
+
+- name: .aider.conf.yml が存在するかチェック
+  ansible.builtin.stat:
+    path: "/home/{{ default_user }}/.aider.conf.yml"
+  register: aider_conf_exists
+
+- name: .aider.conf.yml を作成
+  ansible.builtin.copy:
+    dest: "/home/{{ default_user }}/.aider.conf.yml"
+    owner: "{{ default_user }}"
+    group: "{{ default_user }}"
+    mode: '0644'
+    content: |
+      # Aider 設定ファイル (Ansible Managed)
+      model: {{ aider_model }}
+      weak-model: {{ aider_weak_model }}
+      editor-model: {{ aider_editor_model }}
+  become: yes
+  when: not aider_conf_exists.stat.exists
+
+- name: aider のインストール確認
+  ansible.builtin.shell: |
+    export PATH="/home/{{ default_user }}/.local/bin:$PATH"
+    aider --version
+  become: yes
+  become_user: "{{ default_user }}"
+  environment:
+    HOME: "/home/{{ default_user }}"
+  register: aider_version
+  changed_when: false
+
+- name: aider バージョン情報を表示
+  ansible.builtin.debug:
+    msg: "{{ aider_version.stdout }}"

@@ -305,6 +305,10 @@
   ansible.builtin.debug:
     msg: "{{ claude_version.stdout }}"
 
+# aider のインストール
+- name: aider のインストールと設定
+  ansible.builtin.import_tasks: aider.yml
+
 - name: 開発ツールのインストール完了メッセージ
   ansible.builtin.debug:
-    msg: "開発ツールのインストールが完了しました: CLI Tools, Docker, Docker Compose, pyenv, nvm, Node.js, Claude Code"
+    msg: "開発ツールのインストールが完了しました: CLI Tools, Docker, Docker Compose, pyenv, nvm, Node.js, Claude Code, aider"
