@@ -1,0 +1,56 @@
+---
+# nvm + Node.js のインストールと設定
+
+- name: nvm がインストール済みかチェック
+  ansible.builtin.stat:
+    path: "/home/{{ default_user }}/.nvm"
+  register: nvm_installed
+
+- name: nvm インストールスクリプトをダウンロード
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh
+    dest: /tmp/nvm-install.sh
+    mode: '0755'
+  when: not nvm_installed.stat.exists
+
+- name: nvm をインストール
+  ansible.builtin.shell: bash /tmp/nvm-install.sh
+  become: yes
+  become_user: "{{ default_user }}"
+  environment:
+    HOME: "/home/{{ default_user }}"
+  when: not nvm_installed.stat.exists
+
+- name: .bashrc に nvm 設定があるか確認
+  ansible.builtin.shell: grep -q 'ANSIBLE MANAGED BLOCK - nvm' "/home/{{ default_user }}/.bashrc"
+  register: bashrc_nvm_check
+  changed_when: false
+  failed_when: false
+  become: yes
+  become_user: "{{ default_user }}"
+
+- name: .bashrc に nvm 設定を追加
+  ansible.builtin.blockinfile:
+    path: "/home/{{ default_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - nvm"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    create: yes
+  become: yes
+  become_user: "{{ default_user }}"
+  when: bashrc_nvm_check.rc != 0
+
+- name: Node.js LTS をインストール
+  ansible.builtin.shell: |
+    export NVM_DIR="/home/{{ default_user }}/.nvm"
+    source "$NVM_DIR/nvm.sh"
+    nvm install --lts
+    nvm alias default node
+  args:
+    executable: /bin/bash
+  become: yes
+  become_user: "{{ default_user }}"
+  environment:
+    HOME: "/home/{{ default_user }}"

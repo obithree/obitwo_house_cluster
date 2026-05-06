@@ -1,0 +1,52 @@
+---
+# Claude Code のインストールと設定
+
+- name: claude code をインストール
+  ansible.builtin.shell: |
+    export NVM_DIR="/home/{{ default_user }}/.nvm"
+    source "$NVM_DIR/nvm.sh"
+    npm install -g @anthropic-ai/claude-code
+  args:
+    executable: /bin/bash
+  become: yes
+  become_user: "{{ default_user }}"
+  environment:
+    HOME: "/home/{{ default_user }}"
+
+- name: .bashrc に Claude Code 環境変数の設定があるか確認
+  ansible.builtin.shell: grep -q 'ANSIBLE MANAGED BLOCK - claude-code' "/home/{{ default_user }}/.bashrc"
+  register: bashrc_claude_check
+  changed_when: false
+  failed_when: false
+  become: yes
+  become_user: "{{ default_user }}"
+
+- name: .bashrc に Claude Code 環境変数を追加
+  ansible.builtin.blockinfile:
+    path: "/home/{{ default_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - claude-code"
+    block: |
+      export ANTHROPIC_BASE_URL={{ claude_code_api_base_url }}
+      export ANTHROPIC_API_KEY={{ claude_code_api_key }}
+    create: yes
+  become: yes
+  become_user: "{{ default_user }}"
+  when: bashrc_claude_check.rc != 0
+
+- name: claude code のインストール確認
+  ansible.builtin.shell: |
+    export NVM_DIR="/home/{{ default_user }}/.nvm"
+    source "$NVM_DIR/nvm.sh"
+    claude --version
+  args:
+    executable: /bin/bash
+  become: yes
+  become_user: "{{ default_user }}"
+  environment:
+    HOME: "/home/{{ default_user }}"
+  register: claude_version
+  changed_when: false
+
+- name: claude code バージョン情報を表示
+  ansible.builtin.debug:
+    msg: "{{ claude_version.stdout }}"
