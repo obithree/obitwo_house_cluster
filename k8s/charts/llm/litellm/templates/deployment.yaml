@@ -31,7 +31,6 @@ spec:
           - "/app/config.yaml"
           - "--port"
           - "{{ .Values.service.targetPort }}"
-          - "--anthropic_proxy"
         ports:
         - name: http
           containerPort: {{ .Values.service.targetPort }}
