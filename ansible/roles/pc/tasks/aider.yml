@@ -50,6 +50,7 @@
     path: "/home/{{ default_user }}/.bashrc"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - aider"
     block: |
+      export PATH="$HOME/.local/bin:$PATH"
       export OLLAMA_API_BASE={{ aider_ollama_api_base_url }}
     create: yes
   become: yes
