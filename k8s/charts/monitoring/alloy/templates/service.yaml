@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-alloy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-alloy
+spec:
+  type: ClusterIP
+  ports:
+    - port: 12345
+      targetPort: http-metrics
+      protocol: TCP
+      name: http-metrics
+  selector:
+    app: {{ .Release.Name }}-alloy

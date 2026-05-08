@@ -1,0 +1,22 @@
+image:
+  repository: grafana/alloy
+  tag: "v1.8.2"
+  pullPolicy: IfNotPresent
+
+prometheus:
+  remoteWrite:
+    url: "http://prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+securityContext:
+  privileged: true
+
+tolerations:
+  - operator: "Exists"

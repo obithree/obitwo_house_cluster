@@ -62,5 +62,8 @@ data:
             regex: (.+)
             target_label: __metrics_path__
             replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+          - source_labels: [__meta_kubernetes_node_name]
+            action: replace
+            target_label: node
           - target_label: job
             replacement: kubernetes-cadvisor

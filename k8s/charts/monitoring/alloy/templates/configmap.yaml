@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-alloy-config
+  namespace: {{ .Release.Namespace }}
+data:
+  config.alloy: |
+    // =====================================================================
+    // Node-level metrics (node_exporter equivalent)
+    // Runs on each node via DaemonSet; NODE_NAME is injected via Downward API
+    // =====================================================================
+    prometheus.exporter.unix "local_system" {
+      procfs_path = "/host/proc"
+      sysfs_path  = "/host/sys"
+      rootfs_path = "/host/root"
+    }
+
+    discovery.relabel "node_exporter_targets" {
+      targets = prometheus.exporter.unix.local_system.targets
+
+      rule {
+        target_label = "node"
+        replacement  = env("NODE_NAME")
+      }
+    }
+
+    prometheus.scrape "node_exporter" {
+      targets         = discovery.relabel.node_exporter_targets.output
+      forward_to      = [prometheus.remote_write.prometheus.receiver]
+      scrape_interval = "15s"
+    }
+
+    // =====================================================================
+    // Remote write to Prometheus
+    // =====================================================================
+    prometheus.remote_write "prometheus" {
+      endpoint {
+        url = "{{ .Values.prometheus.remoteWrite.url }}"
+      }
+    }
