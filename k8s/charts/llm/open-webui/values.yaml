@@ -38,9 +38,9 @@ ingress:
   annotations: {}
 
 env:
-  - name: ENABLE_RAG_WEB_SEARCH
+  - name: ENABLE_WEB_SEARCH
     value: "True"
-  - name: RAG_WEB_SEARCH_ENGINE
+  - name: WEB_SEARCH_ENGINE
     value: "searxng"
   - name: SEARXNG_QUERY_URL
     value: "http://searxng:8080/search?q=<query>&format=json"
