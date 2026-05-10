@@ -1,0 +1,30 @@
+replicaCount: 1
+
+nodeSelector:
+  node-role: worker
+  node-type: pc
+
+image:
+  repository: searxng/searxng
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+# SearXNG settings.yml configuration
+config:
+  # Base URL used for links in search results
+  baseUrl: ""
+  # Secret key for sessions (should be overridden per environment)
+  secretKey: "changeme-please-override"
