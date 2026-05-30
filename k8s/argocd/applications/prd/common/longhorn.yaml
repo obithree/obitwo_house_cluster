@@ -23,3 +23,11 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - Replace=true
+  ignoreDifferences:
+    - group: ""
+      kind: ConfigMap
+      name: longhorn-default-setting
+      jsonPointers:
+        - /data
