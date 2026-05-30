@@ -6,13 +6,3 @@
 - name: update grub and reboot
   reboot:
     reboot_timeout: 300
-
-- name: restart k3s-agent
-  ansible.builtin.systemd:
-    name: k3s-agent
-    state: restarted
-
-- name: restart k3s
-  ansible.builtin.systemd:
-    name: k3s
-    state: restarted
