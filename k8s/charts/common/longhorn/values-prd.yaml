@@ -15,6 +15,7 @@ longhorn:
     storageReservedPercentageForDefaultDisk: 20
 
   persistence:
+    defaultClass: false
     defaultClassReplicaCount: 3
     defaultFsType: ext4
 
