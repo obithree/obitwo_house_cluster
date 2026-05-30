@@ -1,0 +1,34 @@
+---
+- name: Longhorn 前提パッケージをインストール
+  apt:
+    name:
+      - open-iscsi
+      - nfs-common
+      - util-linux
+      - e2fsprogs
+    state: present
+    update_cache: yes
+  tags: longhorn
+
+- name: iscsid サービスを有効化・起動
+  systemd:
+    name: iscsid
+    enabled: yes
+    state: started
+  tags: longhorn
+
+- name: iscsi_tcp カーネルモジュールを起動時に読み込む設定
+  copy:
+    dest: /etc/modules-load.d/iscsi.conf
+    content: |
+      iscsi_tcp
+    owner: root
+    group: root
+    mode: '0644'
+  tags: longhorn
+
+- name: iscsi_tcp カーネルモジュールを即時ロード
+  community.general.modprobe:
+    name: iscsi_tcp
+    state: present
+  tags: longhorn

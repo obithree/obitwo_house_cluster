@@ -9,6 +9,10 @@
   include_tasks: server.yml
   when: inventory_hostname in groups['raspi-master']
 
+- name: Longhorn 前提セットアップ
+  include_tasks: longhorn.yml
+  when: inventory_hostname in groups['raspi-worker']
+
 - name: k3s agent セットアップ
   include_tasks: agent.yml
   when: inventory_hostname in groups['raspi-worker']
