@@ -13,6 +13,6 @@ resources:
   requests:
     cpu: 250m
     memory: 512Mi
-# 長期的にはPersistentVolumeClaimを使用する予定
-# storage:
-#   size: 10Gi
+storage:
+  size: 10Gi
+  storageClassName: longhorn
