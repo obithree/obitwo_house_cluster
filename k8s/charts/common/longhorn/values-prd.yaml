@@ -1,0 +1,37 @@
+# Longhorn - production values
+#
+# 事前準備:
+# 1. raspi-worker ノード (raspi02~04) に Ansible で前提パッケージをインストール済みであること
+#    ansible-playbook -i inventory/hosts.yml playbook/raspi-setup.yml --ask-become-pass
+# 2. iscsid サービスが起動していること（Ansible role で自動設定）
+
+longhorn:
+  defaultSettings:
+    # レプリカ数: raspi-worker が 3 台のため 3 を推奨
+    defaultReplicaCount: 3
+    # ノードダウン時のPod削除ポリシー
+    nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+    # ストレージの使用可能割合 (デフォルト 25 → 20 に緩和)
+    storageReservedPercentageForDefaultDisk: 20
+
+  persistence:
+    defaultClassReplicaCount: 3
+    defaultFsType: ext4
+
+  # longhorn-manager を raspi-worker にのみ配置
+  longhornManager:
+    nodeSelector:
+      node-role: worker
+      node-type: raspi
+
+  # longhorn-driver を raspi-worker にのみ配置
+  longhornDriver:
+    nodeSelector:
+      node-role: worker
+      node-type: raspi
+
+  # UI は worker 上で動作させる
+  longhornUI:
+    nodeSelector:
+      node-role: worker
+      node-type: raspi
