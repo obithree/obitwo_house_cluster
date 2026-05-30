@@ -3,6 +3,9 @@ image:
   repository: grafana/grafana
   tag: "10.2.0"
   pullPolicy: IfNotPresent
+nodeSelector:
+  node-role: worker
+  node-type: raspi
 service:
   type: ClusterIP
   port: 3000

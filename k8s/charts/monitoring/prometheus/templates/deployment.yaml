@@ -16,6 +16,8 @@ spec:
         app: {{ .Release.Name }}-prometheus
     spec:
       serviceAccountName: {{ .Release.Name }}-prometheus
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
       containers:
         - name: prometheus
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
