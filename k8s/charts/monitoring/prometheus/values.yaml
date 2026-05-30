@@ -20,3 +20,8 @@ storage:
 nodeSelector:
   node-role: worker
   node-type: raspi
+
+podSecurityContext:
+  fsGroup: 65534
+  runAsUser: 65534
+  runAsNonRoot: true
