@@ -30,3 +30,12 @@ spec:
       name: longhorn-default-setting
       jsonPointers:
         - /data
+    - group: longhorn.io
+      kind: EngineImage
+      jsonPointers:
+        - /status
+        - /spec/nodeDeploymentMap
+    - group: longhorn.io
+      kind: Engine
+      jsonPointers:
+        - /status
