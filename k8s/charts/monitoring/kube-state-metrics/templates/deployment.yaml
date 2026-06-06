@@ -44,8 +44,8 @@ spec:
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
-              path: /
-              port: {{ .Values.service.telemetryPort }}
+              path: /healthz
+              port: {{ .Values.service.port }}
             initialDelaySeconds: 5
             timeoutSeconds: 5
           resources:

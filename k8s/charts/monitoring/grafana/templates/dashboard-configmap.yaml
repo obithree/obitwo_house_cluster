@@ -272,7 +272,7 @@ data:
         }
       ]
     }
-
+  node-overview.json: |
     {
       "id": null,
       "uid": "node-overview",
