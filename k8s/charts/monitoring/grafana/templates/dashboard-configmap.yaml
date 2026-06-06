@@ -269,6 +269,31 @@ data:
               "refId": "A"
             }
           ]
+        },
+        {
+          "id": 7,
+          "type": "logs",
+          "title": "Pod ログ (stdout/stderr)",
+          "description": "各コンテナの標準出力・標準エラーログ (Loki経由)",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 32 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "sortOrder": "Descending",
+            "dedupStrategy": "none"
+          },
+          "targets": [
+            {
+              "datasource": { "type": "loki", "uid": "loki" },
+              "expr": "{job=\"k8s-pods\", namespace=~\"$namespace\", pod=~\"$pod\"}",
+              "refId": "A"
+            }
+          ]
         }
       ]
     }

@@ -38,3 +38,61 @@ data:
         url = "{{ .Values.prometheus.remoteWrite.url }}"
       }
     }
+
+    // =====================================================================
+    // Pod log collection → Loki
+    // Discovers pods on the current node and streams their logs
+    // =====================================================================
+    discovery.kubernetes "pods" {
+      role = "pod"
+      selectors {
+        role  = "pod"
+        field = "spec.nodeName=" + env("NODE_NAME")
+      }
+    }
+
+    discovery.relabel "pod_logs" {
+      targets = discovery.kubernetes.pods.targets
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_phase"]
+        regex         = "Pending|Succeeded|Failed|Unknown"
+        action        = "drop"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app"]
+        target_label  = "app"
+      }
+
+      rule {
+        target_label = "job"
+        replacement  = "k8s-pods"
+      }
+    }
+
+    loki.source.kubernetes "pod_logs" {
+      targets    = discovery.relabel.pod_logs.output
+      forward_to = [loki.write.loki.receiver]
+    }
+
+    loki.write "loki" {
+      endpoint {
+        url = "{{ .Values.loki.url }}"
+      }
+    }

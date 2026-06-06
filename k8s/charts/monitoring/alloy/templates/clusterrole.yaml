@@ -10,4 +10,5 @@ rules:
       - events
       - namespaces
       - pods
+      - pods/log
     verbs: ["get", "list", "watch"]
