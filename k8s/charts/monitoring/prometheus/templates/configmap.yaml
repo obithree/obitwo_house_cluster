@@ -48,6 +48,12 @@ data:
           - source_labels: [__meta_kubernetes_node_name]
             action: replace
             target_label: node
+      - job_name: 'kube-state-metrics'
+        static_configs:
+          - targets: ['kube-state-metrics-kube-state-metrics.monitoring.svc.cluster.local:8080']
+        relabel_configs:
+          - target_label: job
+            replacement: kube-state-metrics
       - job_name: 'kubernetes-cadvisor'
         scheme: https
         tls_config:

@@ -4,7 +4,275 @@ metadata:
   name: {{ .Release.Name }}-grafana-dashboards
   namespace: {{ .Release.Namespace }}
 data:
-  node-overview.json: |
+  pod-overview.json: |
+    {
+      "id": null,
+      "uid": "pod-overview",
+      "title": "Pod Overview & Events",
+      "description": "各PodのステータスとKubernetesイベント",
+      "tags": ["kubernetes", "pods", "events"],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "label": "Namespace",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": { "query": "label_values(kube_pod_info, namespace)", "refId": "A" },
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "current": {},
+            "options": [],
+            "refresh": 2,
+            "sort": 1
+          },
+          {
+            "name": "pod",
+            "type": "query",
+            "label": "Pod",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": { "query": "label_values(kube_pod_info{namespace=~\"$namespace\"}, pod)", "refId": "A" },
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": true,
+            "current": {},
+            "options": [],
+            "refresh": 2,
+            "sort": 1
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "table",
+          "title": "Pod ステータス一覧",
+          "description": "全Podのフェーズ・再起動回数",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": {
+            "sortBy": [{ "displayName": "Pod", "desc": false }],
+            "frameIndex": 0,
+            "showHeader": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": { "type": "auto" },
+                "filterable": true
+              }
+            },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "Phase" },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": { "type": "color-background" }
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      { "type": "value", "options": { "Running":   { "text": "Running",   "color": "green",  "index": 0 } } },
+                      { "type": "value", "options": { "Pending":   { "text": "Pending",   "color": "yellow", "index": 1 } } },
+                      { "type": "value", "options": { "Failed":    { "text": "Failed",    "color": "red",    "index": 2 } } },
+                      { "type": "value", "options": { "Succeeded": { "text": "Succeeded", "color": "blue",   "index": 3 } } },
+                      { "type": "value", "options": { "Unknown":   { "text": "Unknown",   "color": "grey",   "index": 4 } } }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "kube_pod_status_phase{namespace=~\"$namespace\", pod=~\"$pod\"} == 1",
+              "instant": true,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Value #A": true,
+                  "__name__": true,
+                  "job": true,
+                  "uid": true
+                },
+                "renameByName": {
+                  "namespace": "Namespace",
+                  "pod": "Pod",
+                  "phase": "Phase"
+                },
+                "indexByName": {
+                  "namespace": 0,
+                  "pod": 1,
+                  "phase": 2
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "CPU 使用量 (Pod別)",
+          "description": "各PodのCPU使用量 (cAdvisor)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "cores",
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": { "mode": "multi", "sort": "desc" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", pod=~\"$pod\", container!=\"\", container!=\"POD\"}[5m]))",
+              "legendFormat": "{{ "{{" }}namespace{{ "}}" }}/{{ "{{" }}pod{{ "}}" }}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "メモリ使用量 (Pod別)",
+          "description": "各Podのメモリ使用量 (cAdvisor)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": { "mode": "multi", "sort": "desc" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum by (namespace, pod) (container_memory_working_set_bytes{namespace=~\"$namespace\", pod=~\"$pod\", container!=\"\", container!=\"POD\"})",
+              "legendFormat": "{{ "{{" }}namespace{{ "}}" }}/{{ "{{" }}pod{{ "}}" }}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "コンテナ再起動回数",
+          "description": "各コンテナの累積再起動回数 (kube-state-metrics)",
+          "gridPos": { "h": 6, "w": 12, "x": 0, "y": 16 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": { "lineWidth": 2, "fillOpacity": 10 },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 1 },
+                  { "color": "red", "value": 5 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "tooltip": { "mode": "multi", "sort": "desc" },
+            "legend": { "displayMode": "list", "placement": "bottom" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum by (namespace, pod, container) (kube_pod_container_status_restarts_total{namespace=~\"$namespace\", pod=~\"$pod\"})",
+              "legendFormat": "{{ "{{" }}namespace{{ "}}" }}/{{ "{{" }}pod{{ "}}" }}/{{ "{{" }}container{{ "}}" }}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "piechart",
+          "title": "Podフェーズ分布",
+          "description": "フィルタ対象Namespaceの全Podフェーズ分布",
+          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 16 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "options": {
+            "pieType": "pie",
+            "tooltip": { "mode": "single", "sort": "none" },
+            "legend": { "displayMode": "list", "placement": "right", "values": ["value"] }
+          },
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Running" },   "properties": [{ "id": "color", "value": { "fixedColor": "green",  "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Pending" },   "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Failed" },    "properties": [{ "id": "color", "value": { "fixedColor": "red",    "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Succeeded" }, "properties": [{ "id": "color", "value": { "fixedColor": "blue",   "mode": "fixed" } }] }
+            ]
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "count by (phase) (kube_pod_status_phase{namespace=~\"$namespace\"} == 1)",
+              "instant": true,
+              "legendFormat": "{{ "{{" }}phase{{ "}}" }}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "logs",
+          "title": "Kubernetes イベント",
+          "description": "Kubernetesイベントログ (Loki経由)",
+          "gridPos": { "h": 10, "w": 24, "x": 0, "y": 22 },
+          "datasource": { "type": "loki", "uid": "loki" },
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "sortOrder": "Descending",
+            "dedupStrategy": "none"
+          },
+          "targets": [
+            {
+              "datasource": { "type": "loki", "uid": "loki" },
+              "expr": "{job=\"k8s-events\", namespace=~\"$namespace\"}",
+              "refId": "A"
+            }
+          ]
+        }
+      ]
+    }
+
     {
       "id": null,
       "uid": "node-overview",

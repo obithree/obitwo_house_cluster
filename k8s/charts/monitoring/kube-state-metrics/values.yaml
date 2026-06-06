@@ -1,0 +1,18 @@
+replicaCount: 1
+image:
+  repository: registry.k8s.io/kube-state-metrics/kube-state-metrics
+  tag: "v2.10.1"
+  pullPolicy: IfNotPresent
+nodeSelector:
+  node-role: worker
+  node-type: raspi
+service:
+  port: 8080
+  telemetryPort: 8081
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

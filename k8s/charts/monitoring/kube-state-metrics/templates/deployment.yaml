@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-kube-state-metrics
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-kube-state-metrics
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-kube-state-metrics
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-kube-state-metrics
+    spec:
+      serviceAccountName: {{ .Release.Name }}-kube-state-metrics
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+      containers:
+        - name: kube-state-metrics
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --port={{ .Values.service.port }}
+            - --telemetry-port={{ .Values.service.telemetryPort }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+            - name: telemetry
+              containerPort: {{ .Values.service.telemetryPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.telemetryPort }}
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-alloy-events
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-alloy-events
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-alloy-events
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-alloy-events
+    spec:
+      serviceAccountName: {{ .Release.Name }}-alloy
+      nodeSelector:
+        node-role: worker
+        node-type: raspi
+      containers:
+        - name: alloy
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --storage.path=/tmp/alloy
+          ports:
+            - containerPort: 12345
+              name: http-metrics
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-alloy-events-config

@@ -1,0 +1,20 @@
+replicaCount: 1
+image:
+  repository: grafana/loki
+  tag: "3.0.0"
+  pullPolicy: IfNotPresent
+nodeSelector:
+  node-role: worker
+  node-type: raspi
+service:
+  port: 3100
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+storage:
+  size: 5Gi
+  storageClassName: longhorn

@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-alloy
+  labels:
+    app: {{ .Release.Name }}-alloy
+rules:
+  - apiGroups: [""]
+    resources:
+      - events
+      - namespaces
+      - pods
+    verbs: ["get", "list", "watch"]

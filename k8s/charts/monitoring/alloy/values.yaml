@@ -20,3 +20,6 @@ securityContext:
 
 tolerations:
   - operator: "Exists"
+
+loki:
+  url: "http://loki-loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"

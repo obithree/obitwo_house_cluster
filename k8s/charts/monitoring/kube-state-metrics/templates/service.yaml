@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-kube-state-metrics
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-kube-state-metrics
+spec:
+  selector:
+    app: {{ .Release.Name }}-kube-state-metrics
+  ports:
+    - name: http-metrics
+      port: {{ .Values.service.port }}
+      targetPort: http-metrics
+      protocol: TCP
+    - name: telemetry
+      port: {{ .Values.service.telemetryPort }}
+      targetPort: telemetry
+      protocol: TCP
