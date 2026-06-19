@@ -1,0 +1,49 @@
+---
+# Tailscale のインストール
+
+- name: Tailscale GPGキーの存在確認
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/tailscale-keyring.gpg
+  register: tailscale_gpg_key
+
+- name: Tailscale GPGキーをダウンロードして保存
+  ansible.builtin.shell: |
+    curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.noarmor.gpg \
+      -o /usr/share/keyrings/tailscale-keyring.gpg
+  become: yes
+  when: not tailscale_gpg_key.stat.exists
+
+- name: Tailscale リポジトリファイルの存在と内容を確認
+  ansible.builtin.shell: |
+    test -f /etc/apt/sources.list.d/tailscale.list && \
+    grep -q 'https://pkgs.tailscale.com/stable/ubuntu' /etc/apt/sources.list.d/tailscale.list
+  register: tailscale_repo_check
+  changed_when: false
+  failed_when: false
+
+- name: Tailscale リポジトリを追加
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/tailscale-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu noble main"
+    filename: tailscale
+    state: present
+    update_cache: no
+  become: yes
+  when: tailscale_repo_check.rc != 0
+
+- name: Tailscale をインストール
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: tailscaled サービスを有効化・起動
+  ansible.builtin.systemd:
+    name: tailscaled
+    enabled: yes
+    state: started
+  become: yes
+
+- name: Tailscale インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: "Tailscaleがインストールされました。'sudo tailscale up' を実行してネットワークに接続してください。"

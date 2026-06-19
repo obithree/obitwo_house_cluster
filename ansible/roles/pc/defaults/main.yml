@@ -12,12 +12,19 @@ software_packages:
 # NVIDIAドライバーの設定
 install_nvidia_driver: true  # NVIDIAドライバーをインストールする場合はtrue
 
+# GPU 電力制限の設定
+set_nvidia_power_limit: false  # GPU電力制限を設定する場合はtrue
+nvidia_power_limit_w: 250       # 全GPUに適用する電力制限 (W)
+
 # CUDAの設定
 install_cuda: true  # CUDA Toolkitをインストールする場合はtrue（開発・AI・ゲーム用途）
 cuda_keyring_url: "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb"
 
 # 開発ツールの設定
 install_dev_tools: false  # 開発ツール（CLI Tools, Docker, Docker Compose）をインストールする場合はtrue
+
+# Tailscaleの設定
+install_tailscale: false  # Tailscaleをインストールする場合はtrue
 
 # Claude Code の設定
 claude_code_api_base_url: "http://litellm.home:30939"

@@ -112,10 +112,21 @@
   when: install_nvidia_driver | default(true)
   tags: nvidia
 
+# NVIDIA GPU 電力制限の設定
+- name: NVIDIA GPU 電力制限の設定
+  ansible.builtin.import_tasks: nvidia-power-limit.yml
+  when: set_nvidia_power_limit | default(false)
+  tags: nvidia_power_limit
+
 # 開発ツールのインストール
 - name: 開発ツールのインストール
   ansible.builtin.include_tasks: dev-tools.yml
   when: install_dev_tools | default(false)
+
+# Tailscale のインストール
+- name: Tailscale のインストール
+  ansible.builtin.include_tasks: tailscale.yml
+  when: install_tailscale | default(false)
 
 - name: インストール完了メッセージ
   ansible.builtin.debug:

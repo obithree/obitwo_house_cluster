@@ -1,0 +1,54 @@
+---
+# NVIDIA GPU 電力制限の設定
+
+- name: nvidia-smi の存在確認
+  ansible.builtin.command: which nvidia-smi
+  register: nvidia_smi_check
+  changed_when: false
+  failed_when: false
+
+- name: nvidia-smi が見つからない場合の通知
+  ansible.builtin.debug:
+    msg: "nvidia-smi が見つかりません。電力制限設定をスキップします。"
+  when: nvidia_smi_check.rc != 0
+
+- name: 電力制限スクリプトを配置
+  ansible.builtin.template:
+    src: nvidia-power-limit.sh.j2
+    dest: /usr/local/bin/nvidia-power-limit.sh
+    mode: '0755'
+  become: yes
+  when: nvidia_smi_check.rc == 0
+
+- name: nvidia-power-limit systemd サービスを配置
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/nvidia-power-limit.service
+    content: |
+      [Unit]
+      Description=NVIDIA GPU Power Limit
+      After=multi-user.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/nvidia-power-limit.sh
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: '0644'
+  become: yes
+  when: nvidia_smi_check.rc == 0
+
+- name: nvidia-power-limit サービスを有効化・起動
+  ansible.builtin.systemd:
+    name: nvidia-power-limit
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  become: yes
+  when: nvidia_smi_check.rc == 0
+
+- name: 電力制限設定完了メッセージ
+  ansible.builtin.debug:
+    msg: "GPU 電力制限を {{ nvidia_power_limit_w }}W に設定しました。"
+  when: nvidia_smi_check.rc == 0

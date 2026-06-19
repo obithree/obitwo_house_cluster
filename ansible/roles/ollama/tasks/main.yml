@@ -1,0 +1,97 @@
+---
+# Ollama のインストール
+
+- name: ollama コマンドの存在確認
+  ansible.builtin.stat:
+    path: "{{ ollama_install_dir }}/ollama"
+  register: ollama_binary
+
+- name: Ollama インストールスクリプトをダウンロード
+  ansible.builtin.get_url:
+    url: https://ollama.com/install.sh
+    dest: /tmp/ollama-install.sh
+    mode: '0755'
+  become: yes
+  when: not ollama_binary.stat.exists
+
+- name: Ollama インストールスクリプトを実行
+  ansible.builtin.command: /tmp/ollama-install.sh
+  become: yes
+  environment:
+    OLLAMA_HOST: "{{ ollama_host }}:{{ ollama_port }}"
+  when: not ollama_binary.stat.exists
+  register: ollama_installed
+  notify: restart ollama
+
+- name: Ollama インストールスクリプトを削除
+  ansible.builtin.file:
+    path: /tmp/ollama-install.sh
+    state: absent
+  become: yes
+  when: not ollama_binary.stat.exists
+
+# サービスの設定上書き（OLLAMA_HOST の反映）
+- name: ollama サービス用 override ディレクトリを作成
+  ansible.builtin.file:
+    path: /etc/systemd/system/ollama.service.d
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: ollama サービス設定を上書き (OLLAMA_HOST)
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/ollama.service.d/override.conf
+    content: |
+      [Service]
+      Environment="OLLAMA_HOST={{ ollama_host }}:{{ ollama_port }}"
+    mode: '0644'
+  become: yes
+  notify:
+    - reload systemd
+    - restart ollama
+
+- name: ollama サービスを有効化・起動
+  ansible.builtin.systemd:
+    name: ollama
+    enabled: yes
+    state: started
+    daemon_reload: yes
+  become: yes
+
+# NVIDIA GPU が利用可能な場合の確認
+- name: NVIDIA GPU の検出
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_smi_result
+  changed_when: false
+  failed_when: false
+
+- name: GPU 検出結果を表示
+  ansible.builtin.debug:
+    msg: "{{ 'NVIDIA GPU が検出されました。GPU アクセラレーションが有効です。' if nvidia_smi_result.rc == 0 else 'NVIDIA GPU が検出されませんでした。CPU モードで動作します。' }}"
+
+# モデルの自動取得
+- name: Ollama サービスの起動を待機
+  ansible.builtin.wait_for:
+    host: "{{ ollama_host if ollama_host != '0.0.0.0' else '127.0.0.1' }}"
+    port: "{{ ollama_port }}"
+    timeout: 30
+  when: ollama_models | length > 0
+
+- name: Ollama モデルをダウンロード
+  ansible.builtin.command: ollama pull {{ item }}
+  loop: "{{ ollama_models }}"
+  become: yes
+  become_user: "{{ ollama_service_user }}"
+  environment:
+    OLLAMA_HOST: "http://127.0.0.1:{{ ollama_port }}"
+  when: ollama_models | length > 0
+  register: ollama_pull
+  changed_when: "'pulling' in ollama_pull.stdout"
+
+- name: Ollama インストール完了メッセージ
+  ansible.builtin.debug:
+    msg: >-
+      Ollama がインストールされました。
+      API エンドポイント: http://{{ ollama_host }}:{{ ollama_port }}
+      モデル一覧: ollama list
+      モデル実行例: ollama run llama3

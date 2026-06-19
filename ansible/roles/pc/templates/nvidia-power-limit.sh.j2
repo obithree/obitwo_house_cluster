@@ -1,0 +1,6 @@
+#!/bin/bash
+# Managed by Ansible - do not edit manually
+# GPU 電力制限設定スクリプト
+
+nvidia-smi -pm 1
+nvidia-smi -pl {{ nvidia_power_limit_w }}
