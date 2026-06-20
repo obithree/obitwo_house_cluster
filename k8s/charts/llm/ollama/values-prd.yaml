@@ -30,7 +30,7 @@ env:
   - name: OLLAMA_FLASH_ATTENTION
     value: "1"
   - name: OLLAMA_KV_CACHE_TYPE
-    value: "q8_0"
+    value: "f16"
 
 models:
   - gemma3:4b
