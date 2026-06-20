@@ -29,6 +29,8 @@ env:
     value: "http://searxng:8080/search?q=<query>&format=json"
   - name: ENABLE_WEB_LOADER_SSL_VERIFICATION
     value: "False"
+  - name: BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL
+    value: "True"
 
 ingress:
   enabled: true
