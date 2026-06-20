@@ -11,22 +11,22 @@ persistence:
 
 resources:
   requests:
-    memory: "4Gi"
-    cpu: "2000m"
-    gpu: "1"
-  limits:
     memory: "8Gi"
     cpu: "4000m"
-    gpu: "1"
+    gpu: "2"
+  limits:
+    memory: "24Gi"
+    cpu: "16000m"
+    gpu: "2"
 
 gpu:
   enabled: true
 
 env:
   - name: OLLAMA_NUM_PARALLEL
-    value: "1"
+    value: "2"
   - name: OLLAMA_MAX_LOADED_MODELS
-    value: "1"
+    value: "2"
   - name: OLLAMA_FLASH_ATTENTION
     value: "1"
   - name: OLLAMA_KV_CACHE_TYPE
