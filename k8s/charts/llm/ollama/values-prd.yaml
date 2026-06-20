@@ -36,6 +36,7 @@ models:
   - gemma3:4b
   - qwen3.6:27b
   - gemma4:26b-a4b-it-q4_K_M
+  - qwen3.6:35b-a3b-mtp-q4_K_M
 
 ingress:
   enabled: true
