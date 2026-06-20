@@ -36,21 +36,13 @@
     state: directory
     mode: '0755'
 
-- name: nvidia-ctk で k3s containerd の config.toml.tmpl に NVIDIA ランタイムを設定（デフォルトランタイムとして）
-  ansible.builtin.command: >
-    nvidia-ctk runtime configure
-    --runtime=containerd
-    --config=/var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
-    --set-as-default
-  register: nvidia_ctk_result
-  changed_when: nvidia_ctk_result.rc == 0
-  notify: restart k3s-agent
-
-- name: config.toml.tmpl に default_runtime_name を明示設定（imports が反映されない場合の保険）
-  ansible.builtin.replace:
-    path: /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
-    regexp: '(\[plugins\."io\.containerd\.cri\.v1\.runtime"\.containerd\])\s*\n(\s+)\[plugins\.'
-    replace: '\1\n\2default_runtime_name = "nvidia"\n\2[plugins.'
+- name: k3s containerd の config.toml.tmpl を配置（CNIパス + NVIDIAデフォルトランタイム）
+  ansible.builtin.template:
+    src: containerd-config.toml.tmpl.j2
+    dest: /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+    owner: root
+    group: root
+    mode: '0644'
   notify: restart k3s-agent
 
 # CDI スペックの生成

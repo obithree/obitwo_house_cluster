@@ -1,0 +1,8 @@
+imports = ["/etc/containerd/conf.d/*.toml"]
+version = 2
+
+# k3s の CNI バイナリとネットワーク設定のパスを明示指定
+# （デフォルトの /opt/cni/bin と /etc/cni/net.d は k3s 環境では使用しない）
+[plugins."io.containerd.grpc.v1.cri".cni]
+  bin_dir = "/var/lib/rancher/k3s/data/cni"
+  conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d"
