@@ -85,9 +85,6 @@ spec:
       - name: home
         persistentVolumeClaim:
           claimName: steam-headless-home
-      - name: games
-        persistentVolumeClaim:
-          claimName: steam-headless-games
       {{- end }}
       {{- if .Values.hostGamesLib.enabled }}
       - name: games-lib
