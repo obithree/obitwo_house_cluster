@@ -1,0 +1,55 @@
+replicaCount: 1
+
+image:
+  tag: "latest"
+
+service:
+  loadBalancerIP: "192.168.100.203"
+
+hostSteamConfig:
+  enabled: true
+
+persistence:
+  home:
+    size: 10Gi
+
+hostGamesLib:
+  enabled: true
+
+resources:
+  requests:
+    memory: "16Gi"
+    cpu: "8000m"
+    gpu: "1"
+  limits:
+    memory: "56Gi"
+    cpu: "28000m"
+    gpu: "1"
+
+gpu:
+  enabled: true
+
+env:
+  - name: PUID
+    value: "1000"
+  - name: PGID
+    value: "1000"
+  - name: UMASK
+    value: "000"
+  - name: TZ
+    value: "Asia/Tokyo"
+  - name: DISPLAY
+    value: ":55"
+  - name: MODE
+    value: "primary"
+  - name: WEB_UI_MODE
+    value: "vnc"
+  - name: ENABLE_VNC_AUDIO
+    value: "true"
+
+# NEKO_PASSWORD / NEKO_PASSWORD_ADMIN はSecretで管理
+# デプロイ前に以下コマンドでSecretを作成:
+# kubectl create secret generic steam-headless-secret \
+#   --namespace gaming \
+#   --from-literal=NEKO_PASSWORD=<password> \
+#   --from-literal=NEKO_PASSWORD_ADMIN=<admin-password>

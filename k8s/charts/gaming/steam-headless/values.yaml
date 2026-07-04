@@ -1,0 +1,89 @@
+replicaCount: 1
+
+nodeSelector:
+  node-role: worker
+  node-type: pc
+
+image:
+  repository: josh5/steam-headless
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+# noVNC Web UI
+webui:
+  port: 8083
+
+# Steam Remote Play ports
+steamRemotePlay:
+  tcpPort1: 27036
+  udpPort1: 27036
+  tcpPort2: 27037
+
+service:
+  type: LoadBalancer
+  loadBalancerIP: "192.168.100.203"
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  # ユーザーホームディレクトリ (Steam設定・アカウント情報)
+  home:
+    size: 10Gi
+
+# ホストのゲームライブラリをコンテナと共有する設定
+hostGamesLib:
+  enabled: false
+  # ホスト側のパス (steamappsの親ディレクトリ)
+  hostPath: "/home/obitwo/snap/steam/common/.local/share/Steam"
+  # コンテナ内のマウント先 (SteamでライブラリとしてこのPathを追加する)
+  mountPath: "/mnt/games"
+
+resources:
+  requests:
+    memory: "4Gi"
+    cpu: "2000m"
+    gpu: "1"
+  limits:
+    memory: "8Gi"
+    cpu: "8000m"
+    gpu: "1"
+
+gpu:
+  enabled: true
+  vendor: nvidia
+  visibleDevices: "all"
+  driverCapabilities: "all"
+
+env:
+  - name: PUID
+    value: "1000"
+  - name: PGID
+    value: "1000"
+  - name: UMASK
+    value: "000"
+  - name: TZ
+    value: "Asia/Tokyo"
+  - name: DISPLAY
+    value: ":55"
+  - name: MODE
+    value: "primary"
+  - name: WEB_UI_MODE
+    value: "vnc"
+  - name: ENABLE_VNC_AUDIO
+    value: "true"
+  - name: NEKO_PASSWORD
+    value: "steam"
+  - name: NEKO_PASSWORD_ADMIN
+    value: "steamadmin"
+
+# パスワード系はSecretで管理 (values-prd.yamlで上書き、またはkubectl secretで直接作成)
+secret:
+  nekoPassword: "changeme"
+  nekoPasswordAdmin: "changeme-admin"
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: ""

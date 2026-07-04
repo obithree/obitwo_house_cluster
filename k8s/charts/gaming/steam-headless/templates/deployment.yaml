@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: steam-headless
+  labels:
+    app: steam-headless
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: steam-headless
+  template:
+    metadata:
+      labels:
+        app: steam-headless
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: webui
+          containerPort: {{ .Values.webui.port }}
+          protocol: TCP
+        - name: steam-tcp1
+          containerPort: {{ .Values.steamRemotePlay.tcpPort1 }}
+          protocol: TCP
+        - name: steam-udp1
+          containerPort: {{ .Values.steamRemotePlay.udpPort1 }}
+          protocol: UDP
+        - name: steam-tcp2
+          containerPort: {{ .Values.steamRemotePlay.tcpPort2 }}
+          protocol: TCP
+        env:
+        {{- if .Values.gpu.enabled }}
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: {{ .Values.gpu.visibleDevices | quote }}
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: {{ .Values.gpu.driverCapabilities | quote }}
+        {{- end }}
+        {{- with .Values.env }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        envFrom:
+        - secretRef:
+            name: steam-headless-secret
+        securityContext:
+          privileged: true
+        volumeMounts:
+        {{- if .Values.persistence.enabled }}
+        - name: home
+          mountPath: /home/default
+        {{- end }}
+        {{- if .Values.hostGamesLib.enabled }}
+        - name: games-lib
+          mountPath: {{ .Values.hostGamesLib.mountPath }}
+        {{- end }}
+        - name: dev-dri
+          mountPath: /dev/dri
+        - name: shm
+          mountPath: /dev/shm
+        resources:
+          requests:
+            memory: {{ .Values.resources.requests.memory }}
+            cpu: {{ .Values.resources.requests.cpu }}
+            {{- if .Values.gpu.enabled }}
+            nvidia.com/gpu: {{ .Values.resources.requests.gpu | quote }}
+            {{- end }}
+          limits:
+            memory: {{ .Values.resources.limits.memory }}
+            cpu: {{ .Values.resources.limits.cpu }}
+            {{- if .Values.gpu.enabled }}
+            nvidia.com/gpu: {{ .Values.resources.limits.gpu | quote }}
+            {{- end }}
+      volumes:
+      {{- if .Values.persistence.enabled }}
+      - name: home
+        persistentVolumeClaim:
+          claimName: steam-headless-home
+      - name: games
+        persistentVolumeClaim:
+          claimName: steam-headless-games
+      {{- end }}
+      {{- if .Values.hostGamesLib.enabled }}
+      - name: games-lib
+        hostPath:
+          path: {{ .Values.hostGamesLib.hostPath }}
+          type: Directory
+      {{- end }}
+      - name: dev-dri
+        hostPath:
+          path: /dev/dri
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 2Gi

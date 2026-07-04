@@ -1,0 +1,6 @@
+apiVersion: v2
+name: steam-headless
+description: Steam Headless Helm chart for Kubernetes (josh5/steam-headless)
+type: application
+version: 0.1.0
+appVersion: "latest"

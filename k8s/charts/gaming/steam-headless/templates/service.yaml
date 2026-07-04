@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: steam-headless
+  labels:
+    app: steam-headless
+  {{- if .Values.service.loadBalancerIP }}
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: {{ .Values.service.loadBalancerIP | quote }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- if and (eq .Values.service.type "LoadBalancer") .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+  {{- end }}
+  ports:
+  # noVNC Web UI
+  - port: {{ .Values.webui.port }}
+    targetPort: {{ .Values.webui.port }}
+    protocol: TCP
+    name: webui
+  # Steam Remote Play (TCP)
+  - port: {{ .Values.steamRemotePlay.tcpPort1 }}
+    targetPort: {{ .Values.steamRemotePlay.tcpPort1 }}
+    protocol: TCP
+    name: steam-tcp1
+  # Steam Remote Play (UDP)
+  - port: {{ .Values.steamRemotePlay.udpPort1 }}
+    targetPort: {{ .Values.steamRemotePlay.udpPort1 }}
+    protocol: UDP
+    name: steam-udp1
+  # Steam Remote Play (TCP2)
+  - port: {{ .Values.steamRemotePlay.tcpPort2 }}
+    targetPort: {{ .Values.steamRemotePlay.tcpPort2 }}
+    protocol: TCP
+    name: steam-tcp2
+  selector:
+    app: steam-headless
