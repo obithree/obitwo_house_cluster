@@ -5,8 +5,15 @@ steamlink_user: "{{ ansible_user | default('obitwo') }}"
 # Ubuntu の GDM で Wayland を無効にして Xorg を既定セッションにする。
 steamlink_gdm_config_path: /etc/gdm3/custom.conf
 steamlink_gdm_service: gdm3
-steamlink_xsession: ubuntu-xorg
+# Ubuntu 25.10以降のGNOMEはXorgセッションを提供しないため、Xfceを使用する。
+steamlink_requires_alternative_xsession: >-
+  {{ ansible_facts['distribution_version'] is version('25.10', '>=') }}
+steamlink_xsession: >-
+  {{ 'xfce' if steamlink_requires_alternative_xsession | bool else 'ubuntu-xorg' }}
+steamlink_session_type: x11
 steamlink_gdm_default_session: "{{ steamlink_xsession }}.desktop"
+steamlink_xsession_packages: >-
+  {{ ['xfce4'] if steamlink_requires_alternative_xsession | bool else ['ubuntu-session'] }}
 
 # Steam の画面共有に必要な X11 / D-Bus のクライアント環境。
 steamlink_x11_packages:
@@ -22,5 +29,5 @@ steamlink_steam_package: steam-installer
 # 接続中の GUI セッションが終了するため、既定では false。
 steamlink_restart_gdm: false
 
-# true にするとユーザーごとの既定セッションも ubuntu-xorg に固定する。
+# true にするとユーザーごとの既定セッションも X11 に固定する。
 steamlink_set_user_xsession: true

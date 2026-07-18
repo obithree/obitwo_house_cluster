@@ -2,12 +2,12 @@
 - name: Ubuntu で実行されていることを確認
   ansible.builtin.assert:
     that:
-      - ansible_distribution == 'Ubuntu'
+      - ansible_facts['distribution'] == 'Ubuntu'
     fail_msg: "steamlink ロールは Ubuntu の GDM 向けです。"
 
 - name: X11 と Steam Link の依存パッケージをインストール
   ansible.builtin.apt:
-    name: "{{ steamlink_x11_packages }}"
+    name: "{{ steamlink_x11_packages + steamlink_xsession_packages }}"
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -17,6 +17,7 @@
   ansible.builtin.command: dpkg --print-foreign-architectures
   register: steamlink_foreign_architectures
   changed_when: false
+  check_mode: false
   when: steamlink_install_steam | bool
 
 - name: 32bit アーキテクチャを有効化
@@ -38,6 +39,7 @@
   ansible.builtin.command: "apt-cache policy {{ steamlink_steam_package }}"
   register: steamlink_steam_package_policy
   changed_when: false
+  check_mode: false
   when: steamlink_install_steam | bool
   environment:
     LC_ALL: C
@@ -88,10 +90,10 @@
 - name: Ubuntu Xorg セッションが利用可能であることを確認
   ansible.builtin.assert:
     that:
-      - steamlink_xsession_file.stat.exists
+      - steamlink_xsession_file.stat.exists or ansible_check_mode
     fail_msg: >-
-      {{ steamlink_xsession }} セッションが見つかりません。ubuntu-desktop または ubuntu-session を
-      導入してから実行してください。
+      {{ steamlink_xsession }} セッションが見つかりません。
+      {{ steamlink_xsession_packages | join(', ') }} を導入してから実行してください。
 
 - name: GDM で Wayland を無効化
   community.general.ini_file:
@@ -125,16 +127,26 @@
   become: true
   when: steamlink_set_user_xsession | bool
 
-- name: Steam Link ユーザーの Xorg セッションを固定
+- name: Steam Link ユーザーの X11 セッションを固定
   community.general.ini_file:
     path: "/var/lib/AccountsService/users/{{ steamlink_user }}"
     section: User
-    option: XSession
-    value: "{{ steamlink_xsession }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
     owner: root
     group: root
     mode: '0600'
     no_extra_spaces: true
+  loop:
+    - option: Session
+      value: "{{ steamlink_xsession }}"
+    - option: SessionType
+      value: "{{ steamlink_session_type }}"
+    # AccountsService の旧バージョンと他のディスプレイマネージャーとの互換用。
+    - option: XSession
+      value: "{{ steamlink_xsession }}"
+  loop_control:
+    label: "{{ item.option }}={{ item.value }}"
   become: true
   when: steamlink_set_user_xsession | bool
   register: steamlink_user_session_setting

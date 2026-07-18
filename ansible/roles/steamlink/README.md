@@ -1,12 +1,13 @@
 # Steam Link role
 
-Ubuntu の GDM ログインを Wayland から Xorg に切り替え、Steam Remote Play / Steam Link のホストとして使うためのロールです。
+Ubuntu の GDM ログインをWaylandからXorgへ切り替え、Steam Remote Play / Steam Linkのホストとして使うためのロールです。Ubuntu 25.10以降ではGNOMEのXorgセッションが提供されないため、XfceのX11セッションを導入します。Ubuntu 24.04以前では従来のUbuntu Xorgセッションを使用します。
 
 実施内容:
 
 - `xserver-xorg`、`x11-xserver-utils`、`dbus-x11` を導入
-- `/etc/gdm3/custom.conf` に `WaylandEnable=false` と `DefaultSession=ubuntu-xorg.desktop` を設定
-- 対象ユーザーの AccountsService の既存属性を維持し、`XSession=ubuntu-xorg` を設定
+- Ubuntu 25.10以降では`xfce4`を導入し、`xfce.desktop`をX11セッションとして使用
+- `/etc/gdm3/custom.conf` に `WaylandEnable=false` と対象の`DefaultSession`を設定
+- 対象ユーザーのAccountsServiceの既存属性を維持し、`Session`、`SessionType=x11`、互換用の`XSession`を設定
 - i386 アーキテクチャと multiverse を有効化して `steam-installer` をAPTで導入
 - GDM を有効化して起動
 
@@ -24,6 +25,7 @@ ansible-playbook playbook/steamlink-setup.yml --limit obitwo-pc --ask-become-pas
 ## 主な変数
 
 - `steamlink_user`: Xorg セッションを使うユーザー（既定: `ansible_user`）
+- `steamlink_session_type`: AccountsServiceへ設定するセッション種別（既定: `x11`）
 - `steamlink_restart_gdm`: 変更後に GDM を再起動するか（既定: `false`）
 - `steamlink_set_user_xsession`: ユーザーのセッションを Xorg に固定するか（既定: `true`）
 - `steamlink_install_steam`: APT版 `steam-installer` を導入するか（既定: `true`）
