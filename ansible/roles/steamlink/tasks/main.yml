@@ -127,6 +127,27 @@
       {{ steamlink_xsession }} セッションが見つかりません。
       {{ steamlink_xsession_packages | join(', ') }} を導入してから実行してください。
 
+- name: Xorg 設定ディレクトリを作成
+  ansible.builtin.file:
+    path: "{{ steamlink_primary_gpu_config_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when: steamlink_configure_primary_gpu | bool
+
+- name: Steam Link 用GPUを Xorg のプライマリに設定
+  ansible.builtin.template:
+    src: primary-gpu.conf.j2
+    dest: "{{ steamlink_primary_gpu_config_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: steamlink_configure_primary_gpu | bool
+  notify: restart gdm
+
 - name: GDM で Wayland を無効化
   community.general.ini_file:
     path: "{{ steamlink_gdm_config_path }}"

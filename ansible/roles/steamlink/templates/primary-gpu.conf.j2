@@ -1,0 +1,7 @@
+# Ansible managed
+Section "OutputClass"
+    Identifier "Steam Link Primary GPU"
+    MatchDriver "{{ steamlink_primary_gpu_driver }}"
+    Driver "{{ steamlink_primary_gpu_driver }}"
+    Option "PrimaryGPU" "yes"
+EndSection

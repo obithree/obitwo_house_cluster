@@ -32,5 +32,9 @@ ansible-playbook playbook/steamlink-setup.yml --limit steam.obitwo.arpa --ask-be
 - `steamlink_install_steam`: APT版 `steam-installer` を導入するか（既定: `true`）
 - `steamlink_autostart_big_picture`: ログイン時にSteam Big Pictureを自動起動するか（既定: `true`）
 - `steamlink_disable_steam_cef_gpu`: Big PictureのCEF GPU描画を無効化するか（既定: `true`）。ゲーム描画とVAAPI/NVENCエンコードには影響しません
+- `steamlink_configure_primary_gpu`: パススルーGPUをXorgのプライマリに設定するか（既定: `true`）
+- `steamlink_primary_gpu_driver`: プライマリにするXorgドライバー（既定: `amdgpu`）
 
 このロールはSteam Installerの導入とBig Pictureの自動起動設定までを行います。Steamの初回起動、アカウント認証、Steam Guard、Remote Playの確認とSteam Link端末とのペアリングは、X11セッションへログイン後に手動で実施してください。
+
+GPUパススルー環境では、既定で `amdgpu` をXorgのプライマリGPUに設定します。AMD GPUへモニターまたはダミープラグを接続してから実行してください。Proxmoxの仮想ディスプレイを無効にすると、noVNCコンソールは利用できなくなるため、事前にSSH接続を確認してください。

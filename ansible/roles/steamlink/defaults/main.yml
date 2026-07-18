@@ -21,6 +21,12 @@ steamlink_x11_packages:
   - x11-xserver-utils
   - dbus-x11
 
+# パススルーした AMD GPU を Xorg のプライマリGPUとして使用する。
+# モニターまたはダミープラグをGPUへ接続した状態で有効にすること。
+steamlink_configure_primary_gpu: true
+steamlink_primary_gpu_driver: amdgpu
+steamlink_primary_gpu_config_path: /etc/X11/xorg.conf.d/10-steamlink-primary-gpu.conf
+
 # Ubuntu のネイティブパッケージから Steam Installer をインストールする。
 steamlink_install_steam: true
 steamlink_steam_package: steam-installer
