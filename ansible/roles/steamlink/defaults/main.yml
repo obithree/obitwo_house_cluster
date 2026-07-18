@@ -6,6 +6,7 @@ steamlink_user: "{{ ansible_user | default('obitwo') }}"
 steamlink_gdm_config_path: /etc/gdm3/custom.conf
 steamlink_gdm_service: gdm3
 steamlink_xsession: ubuntu-xorg
+steamlink_gdm_default_session: "{{ steamlink_xsession }}.desktop"
 
 # Steam の画面共有に必要な X11 / D-Bus のクライアント環境。
 steamlink_x11_packages:
@@ -13,8 +14,8 @@ steamlink_x11_packages:
   - x11-xserver-utils
   - dbus-x11
 
-# Steam の導入は既存の pc ロールに任せる。単独で使うときだけ true にする。
-steamlink_install_steam: false
+# Ubuntu のネイティブパッケージから Steam Installer をインストールする。
+steamlink_install_steam: true
 steamlink_steam_package: steam-installer
 
 # true にすると role 実行の最後に GDM を再起動する。

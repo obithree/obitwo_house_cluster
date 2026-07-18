@@ -13,7 +13,54 @@
     cache_valid_time: 3600
   become: true
 
-- name: Steam をインストール (任意)
+- name: 32bit アーキテクチャの有効状態を確認
+  ansible.builtin.command: dpkg --print-foreign-architectures
+  register: steamlink_foreign_architectures
+  changed_when: false
+  when: steamlink_install_steam | bool
+
+- name: 32bit アーキテクチャを有効化
+  ansible.builtin.command: dpkg --add-architecture i386
+  become: true
+  when:
+    - steamlink_install_steam | bool
+    - "'i386' not in steamlink_foreign_architectures.stdout_lines"
+  register: steamlink_i386_added
+
+- name: multiverse の有効化に必要なパッケージをインストール
+  ansible.builtin.apt:
+    name: software-properties-common
+    state: present
+  become: true
+  when: steamlink_install_steam | bool
+
+- name: Steam Installer が現在の APT ソースで利用可能か確認
+  ansible.builtin.command: "apt-cache policy {{ steamlink_steam_package }}"
+  register: steamlink_steam_package_policy
+  changed_when: false
+  when: steamlink_install_steam | bool
+  environment:
+    LC_ALL: C
+
+- name: multiverse リポジトリを有効化
+  ansible.builtin.command: add-apt-repository --yes multiverse
+  become: true
+  when:
+    - steamlink_install_steam | bool
+    - >-
+      'Candidate:' not in steamlink_steam_package_policy.stdout or
+      'Candidate: (none)' in steamlink_steam_package_policy.stdout
+  register: steamlink_multiverse_added
+
+- name: アーキテクチャまたはリポジトリ変更後にパッケージ情報を更新
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+  when:
+    - steamlink_install_steam | bool
+    - steamlink_i386_added is changed or steamlink_multiverse_added is changed
+
+- name: Steam Installer をインストール (APT)
   ansible.builtin.apt:
     name: "{{ steamlink_steam_package }}"
     state: present
@@ -62,7 +109,7 @@
     path: "{{ steamlink_gdm_config_path }}"
     section: daemon
     option: DefaultSession
-    value: "{{ steamlink_xsession }}"
+    value: "{{ steamlink_gdm_default_session }}"
     mode: '0644'
   become: true
   register: steamlink_default_session_setting
@@ -79,14 +126,15 @@
   when: steamlink_set_user_xsession | bool
 
 - name: Steam Link ユーザーの Xorg セッションを固定
-  ansible.builtin.copy:
-    dest: "/var/lib/AccountsService/users/{{ steamlink_user }}"
-    content: |
-      [User]
-      XSession={{ steamlink_xsession }}
+  community.general.ini_file:
+    path: "/var/lib/AccountsService/users/{{ steamlink_user }}"
+    section: User
+    option: XSession
+    value: "{{ steamlink_xsession }}"
     owner: root
     group: root
     mode: '0600'
+    no_extra_spaces: true
   become: true
   when: steamlink_set_user_xsession | bool
   register: steamlink_user_session_setting
