@@ -1,0 +1,25 @@
+---
+# Steam Link ホストに使用するログインユーザー。
+steamlink_user: "{{ ansible_user | default('obitwo') }}"
+
+# Ubuntu の GDM で Wayland を無効にして Xorg を既定セッションにする。
+steamlink_gdm_config_path: /etc/gdm3/custom.conf
+steamlink_gdm_service: gdm3
+steamlink_xsession: ubuntu-xorg
+
+# Steam の画面共有に必要な X11 / D-Bus のクライアント環境。
+steamlink_x11_packages:
+  - xserver-xorg
+  - x11-xserver-utils
+  - dbus-x11
+
+# Steam の導入は既存の pc ロールに任せる。単独で使うときだけ true にする。
+steamlink_install_steam: false
+steamlink_steam_package: steam-installer
+
+# true にすると role 実行の最後に GDM を再起動する。
+# 接続中の GUI セッションが終了するため、既定では false。
+steamlink_restart_gdm: false
+
+# true にするとユーザーごとの既定セッションも ubuntu-xorg に固定する。
+steamlink_set_user_xsession: true

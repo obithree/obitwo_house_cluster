@@ -1,0 +1,6 @@
+---
+- name: Steam Link ホスト用 Ubuntu のセットアップ
+  hosts: pc
+  become: true
+  roles:
+    - role: steamlink

@@ -1,0 +1,107 @@
+---
+- name: Ubuntu で実行されていることを確認
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == 'Ubuntu'
+    fail_msg: "steamlink ロールは Ubuntu の GDM 向けです。"
+
+- name: X11 と Steam Link の依存パッケージをインストール
+  ansible.builtin.apt:
+    name: "{{ steamlink_x11_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Steam をインストール (任意)
+  ansible.builtin.apt:
+    name: "{{ steamlink_steam_package }}"
+    state: present
+  become: true
+  when: steamlink_install_steam | bool
+
+- name: GDM サービスの存在を確認
+  ansible.builtin.stat:
+    path: "/lib/systemd/system/{{ steamlink_gdm_service }}.service"
+  register: steamlink_gdm_unit
+
+- name: GDM が利用可能であることを確認
+  ansible.builtin.assert:
+    that:
+      - steamlink_gdm_unit.stat.exists
+    fail_msg: >-
+      {{ steamlink_gdm_service }} が見つかりません。Ubuntu Desktop の GDM を使用する構成で
+      このロールを実行してください。
+
+- name: Ubuntu Xorg セッションの存在を確認
+  ansible.builtin.stat:
+    path: "/usr/share/xsessions/{{ steamlink_xsession }}.desktop"
+  register: steamlink_xsession_file
+
+- name: Ubuntu Xorg セッションが利用可能であることを確認
+  ansible.builtin.assert:
+    that:
+      - steamlink_xsession_file.stat.exists
+    fail_msg: >-
+      {{ steamlink_xsession }} セッションが見つかりません。ubuntu-desktop または ubuntu-session を
+      導入してから実行してください。
+
+- name: GDM で Wayland を無効化
+  community.general.ini_file:
+    path: "{{ steamlink_gdm_config_path }}"
+    section: daemon
+    option: WaylandEnable
+    value: 'false'
+    mode: '0644'
+  become: true
+  register: steamlink_wayland_setting
+  notify: restart gdm
+
+- name: GDM の既定セッションを Xorg に設定
+  community.general.ini_file:
+    path: "{{ steamlink_gdm_config_path }}"
+    section: daemon
+    option: DefaultSession
+    value: "{{ steamlink_xsession }}"
+    mode: '0644'
+  become: true
+  register: steamlink_default_session_setting
+  notify: restart gdm
+
+- name: AccountsService のユーザー設定ディレクトリを作成
+  ansible.builtin.file:
+    path: /var/lib/AccountsService/users
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when: steamlink_set_user_xsession | bool
+
+- name: Steam Link ユーザーの Xorg セッションを固定
+  ansible.builtin.copy:
+    dest: "/var/lib/AccountsService/users/{{ steamlink_user }}"
+    content: |
+      [User]
+      XSession={{ steamlink_xsession }}
+    owner: root
+    group: root
+    mode: '0600'
+  become: true
+  when: steamlink_set_user_xsession | bool
+  register: steamlink_user_session_setting
+  notify: restart gdm
+
+- name: GDM を有効化・起動
+  ansible.builtin.systemd:
+    name: "{{ steamlink_gdm_service }}"
+    enabled: true
+    state: started
+  become: true
+
+- name: 反映方法を表示
+  ansible.builtin.debug:
+    msg: >-
+      Steam Link 用の X11 設定が完了しました。
+      {{ 'GDM を再起動して設定を反映します。' if steamlink_restart_gdm | bool else
+      '反映するにはログアウトして再ログインするか、サーバーを再起動してください。' }}
