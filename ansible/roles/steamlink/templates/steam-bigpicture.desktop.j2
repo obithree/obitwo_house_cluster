@@ -1,0 +1,12 @@
+# Ansible managed
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Steam Big Picture
+Comment=Start Steam Big Picture for Steam Link
+Exec=env SDL_VIDEODRIVER=x11 steam {{ steamlink_steam_launch_options | join(' ') }}
+Icon=steam
+Categories=Game;
+Terminal=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true

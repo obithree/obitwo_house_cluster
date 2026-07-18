@@ -69,6 +69,38 @@
   become: true
   when: steamlink_install_steam | bool
 
+- name: Steam Link ユーザーのアカウント情報を取得
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ steamlink_user }}"
+  when: steamlink_autostart_big_picture | bool
+
+- name: Steam Link ユーザーのホームとグループを設定
+  ansible.builtin.set_fact:
+    steamlink_user_home: "{{ ansible_facts['getent_passwd'][steamlink_user][4] }}"
+    steamlink_user_gid: "{{ ansible_facts['getent_passwd'][steamlink_user][2] }}"
+  when: steamlink_autostart_big_picture | bool
+
+- name: Steam 自動起動設定ディレクトリを作成
+  ansible.builtin.file:
+    path: "{{ steamlink_user_home }}/.config/autostart"
+    state: directory
+    owner: "{{ steamlink_user }}"
+    group: "{{ steamlink_user_gid }}"
+    mode: '0755'
+  become: true
+  when: steamlink_autostart_big_picture | bool
+
+- name: Steam Big Picture の自動起動を設定
+  ansible.builtin.template:
+    src: steam-bigpicture.desktop.j2
+    dest: "{{ steamlink_user_home }}/.config/autostart/steam-bigpicture.desktop"
+    owner: "{{ steamlink_user }}"
+    group: "{{ steamlink_user_gid }}"
+    mode: '0644'
+  become: true
+  when: steamlink_autostart_big_picture | bool
+
 - name: GDM サービスの存在を確認
   ansible.builtin.stat:
     path: "/lib/systemd/system/{{ steamlink_gdm_service }}.service"

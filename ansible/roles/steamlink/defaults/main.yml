@@ -25,6 +25,13 @@ steamlink_x11_packages:
 steamlink_install_steam: true
 steamlink_steam_package: steam-installer
 
+# X11ログイン時にSteam Big Pictureを自動起動する。
+# CEFのGPU描画だけを無効化し、ゲーム描画とVAAPI/NVENCエンコードは無効化しない。
+steamlink_autostart_big_picture: true
+steamlink_disable_steam_cef_gpu: true
+steamlink_steam_launch_options: >-
+  {{ (['-cef-disable-gpu'] if steamlink_disable_steam_cef_gpu | bool else []) + ['-bigpicture'] }}
+
 # true にすると role 実行の最後に GDM を再起動する。
 # 接続中の GUI セッションが終了するため、既定では false。
 steamlink_restart_gdm: false

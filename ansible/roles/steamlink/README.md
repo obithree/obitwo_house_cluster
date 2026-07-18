@@ -9,15 +9,16 @@ Ubuntu の GDM ログインをWaylandからXorgへ切り替え、Steam Remote Pl
 - `/etc/gdm3/custom.conf` に `WaylandEnable=false` と対象の`DefaultSession`を設定
 - 対象ユーザーのAccountsServiceの既存属性を維持し、`Session`、`SessionType=x11`、互換用の`XSession`を設定
 - i386 アーキテクチャと multiverse を有効化して `steam-installer` をAPTで導入
+- X11ログイン時に`steam -cef-disable-gpu -bigpicture`を自動起動
 - GDM を有効化して起動
 
 ## 使用例
 
-`playbook/steamlink-setup.yml` は `pc` グループを対象にします。
+`playbook/steamlink-setup.yml` は `steamlink` グループを対象にします。既定の対象は`steam.obitwo.arpa`（`192.168.100.129`）です。
 
 ```bash
 cd ansible
-ansible-playbook playbook/steamlink-setup.yml --limit obitwo-pc --ask-become-pass
+ansible-playbook playbook/steamlink-setup.yml --limit steam.obitwo.arpa --ask-become-pass
 ```
 
 既定では GUI セッションを強制終了しないため、実行後にログアウト・ログインまたは再起動してください。直ちに反映する場合は `-e steamlink_restart_gdm=true` を指定できます。この指定は実行中の GUI セッションを終了します。
@@ -29,5 +30,7 @@ ansible-playbook playbook/steamlink-setup.yml --limit obitwo-pc --ask-become-pas
 - `steamlink_restart_gdm`: 変更後に GDM を再起動するか（既定: `false`）
 - `steamlink_set_user_xsession`: ユーザーのセッションを Xorg に固定するか（既定: `true`）
 - `steamlink_install_steam`: APT版 `steam-installer` を導入するか（既定: `true`）
+- `steamlink_autostart_big_picture`: ログイン時にSteam Big Pictureを自動起動するか（既定: `true`）
+- `steamlink_disable_steam_cef_gpu`: Big PictureのCEF GPU描画を無効化するか（既定: `true`）。ゲーム描画とVAAPI/NVENCエンコードには影響しません
 
-このロールはSteam Installerの導入までを行います。Steamの初回起動、アカウント認証、Steam Guard、Remote Playの確認とSteam Link端末とのペアリングは、X11セッションへログイン後に手動で実施してください。
+このロールはSteam Installerの導入とBig Pictureの自動起動設定までを行います。Steamの初回起動、アカウント認証、Steam Guard、Remote Playの確認とSteam Link端末とのペアリングは、X11セッションへログイン後に手動で実施してください。
