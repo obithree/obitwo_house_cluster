@@ -1,0 +1,220 @@
+---
+- name: Ubuntu で実行されていることを確認
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] == 'Ubuntu'
+    fail_msg: "steamlink ロールは Ubuntu の GDM 向けです。"
+
+- name: X11 と Steam Link の依存パッケージをインストール
+  ansible.builtin.apt:
+    name: "{{ steamlink_x11_packages + steamlink_xsession_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: 32bit アーキテクチャの有効状態を確認
+  ansible.builtin.command: dpkg --print-foreign-architectures
+  register: steamlink_foreign_architectures
+  changed_when: false
+  check_mode: false
+  when: steamlink_install_steam | bool
+
+- name: 32bit アーキテクチャを有効化
+  ansible.builtin.command: dpkg --add-architecture i386
+  become: true
+  when:
+    - steamlink_install_steam | bool
+    - "'i386' not in steamlink_foreign_architectures.stdout_lines"
+  register: steamlink_i386_added
+
+- name: multiverse の有効化に必要なパッケージをインストール
+  ansible.builtin.apt:
+    name: software-properties-common
+    state: present
+  become: true
+  when: steamlink_install_steam | bool
+
+- name: Steam Installer が現在の APT ソースで利用可能か確認
+  ansible.builtin.command: "apt-cache policy {{ steamlink_steam_package }}"
+  register: steamlink_steam_package_policy
+  changed_when: false
+  check_mode: false
+  when: steamlink_install_steam | bool
+  environment:
+    LC_ALL: C
+
+- name: multiverse リポジトリを有効化
+  ansible.builtin.command: add-apt-repository --yes multiverse
+  become: true
+  when:
+    - steamlink_install_steam | bool
+    - >-
+      'Candidate:' not in steamlink_steam_package_policy.stdout or
+      'Candidate: (none)' in steamlink_steam_package_policy.stdout
+  register: steamlink_multiverse_added
+
+- name: アーキテクチャまたはリポジトリ変更後にパッケージ情報を更新
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+  when:
+    - steamlink_install_steam | bool
+    - steamlink_i386_added is changed or steamlink_multiverse_added is changed
+
+- name: Steam Installer をインストール (APT)
+  ansible.builtin.apt:
+    name: "{{ steamlink_steam_package }}"
+    state: present
+  become: true
+  when: steamlink_install_steam | bool
+
+- name: Steam Link ユーザーのアカウント情報を取得
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ steamlink_user }}"
+  when: steamlink_autostart_big_picture | bool
+
+- name: Steam Link ユーザーのホームとグループを設定
+  ansible.builtin.set_fact:
+    steamlink_user_home: "{{ ansible_facts['getent_passwd'][steamlink_user][4] }}"
+    steamlink_user_gid: "{{ ansible_facts['getent_passwd'][steamlink_user][2] }}"
+  when: steamlink_autostart_big_picture | bool
+
+- name: Steam 自動起動設定ディレクトリを作成
+  ansible.builtin.file:
+    path: "{{ steamlink_user_home }}/.config/autostart"
+    state: directory
+    owner: "{{ steamlink_user }}"
+    group: "{{ steamlink_user_gid }}"
+    mode: '0755'
+  become: true
+  when: steamlink_autostart_big_picture | bool
+
+- name: Steam Big Picture の自動起動を設定
+  ansible.builtin.template:
+    src: steam-bigpicture.desktop.j2
+    dest: "{{ steamlink_user_home }}/.config/autostart/steam-bigpicture.desktop"
+    owner: "{{ steamlink_user }}"
+    group: "{{ steamlink_user_gid }}"
+    mode: '0644'
+  become: true
+  when: steamlink_autostart_big_picture | bool
+
+- name: GDM サービスの存在を確認
+  ansible.builtin.stat:
+    path: "/lib/systemd/system/{{ steamlink_gdm_service }}.service"
+  register: steamlink_gdm_unit
+
+- name: GDM が利用可能であることを確認
+  ansible.builtin.assert:
+    that:
+      - steamlink_gdm_unit.stat.exists
+    fail_msg: >-
+      {{ steamlink_gdm_service }} が見つかりません。Ubuntu Desktop の GDM を使用する構成で
+      このロールを実行してください。
+
+- name: Ubuntu Xorg セッションの存在を確認
+  ansible.builtin.stat:
+    path: "/usr/share/xsessions/{{ steamlink_xsession }}.desktop"
+  register: steamlink_xsession_file
+
+- name: Ubuntu Xorg セッションが利用可能であることを確認
+  ansible.builtin.assert:
+    that:
+      - steamlink_xsession_file.stat.exists or ansible_check_mode
+    fail_msg: >-
+      {{ steamlink_xsession }} セッションが見つかりません。
+      {{ steamlink_xsession_packages | join(', ') }} を導入してから実行してください。
+
+- name: Xorg 設定ディレクトリを作成
+  ansible.builtin.file:
+    path: "{{ steamlink_primary_gpu_config_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when: steamlink_configure_primary_gpu | bool
+
+- name: Steam Link 用GPUを Xorg のプライマリに設定
+  ansible.builtin.template:
+    src: primary-gpu.conf.j2
+    dest: "{{ steamlink_primary_gpu_config_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  when: steamlink_configure_primary_gpu | bool
+  notify: restart gdm
+
+- name: GDM で Wayland を無効化
+  community.general.ini_file:
+    path: "{{ steamlink_gdm_config_path }}"
+    section: daemon
+    option: WaylandEnable
+    value: 'false'
+    mode: '0644'
+  become: true
+  register: steamlink_wayland_setting
+  notify: restart gdm
+
+- name: GDM の既定セッションを Xorg に設定
+  community.general.ini_file:
+    path: "{{ steamlink_gdm_config_path }}"
+    section: daemon
+    option: DefaultSession
+    value: "{{ steamlink_gdm_default_session }}"
+    mode: '0644'
+  become: true
+  register: steamlink_default_session_setting
+  notify: restart gdm
+
+- name: AccountsService のユーザー設定ディレクトリを作成
+  ansible.builtin.file:
+    path: /var/lib/AccountsService/users
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  when: steamlink_set_user_xsession | bool
+
+- name: Steam Link ユーザーの X11 セッションを固定
+  community.general.ini_file:
+    path: "/var/lib/AccountsService/users/{{ steamlink_user }}"
+    section: User
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    owner: root
+    group: root
+    mode: '0600'
+    no_extra_spaces: true
+  loop:
+    - option: Session
+      value: "{{ steamlink_xsession }}"
+    - option: SessionType
+      value: "{{ steamlink_session_type }}"
+    # AccountsService の旧バージョンと他のディスプレイマネージャーとの互換用。
+    - option: XSession
+      value: "{{ steamlink_xsession }}"
+  loop_control:
+    label: "{{ item.option }}={{ item.value }}"
+  become: true
+  when: steamlink_set_user_xsession | bool
+  register: steamlink_user_session_setting
+  notify: restart gdm
+
+- name: GDM を有効化・起動
+  ansible.builtin.systemd:
+    name: "{{ steamlink_gdm_service }}"
+    enabled: true
+    state: started
+  become: true
+
+- name: 反映方法を表示
+  ansible.builtin.debug:
+    msg: >-
+      Steam Link 用の X11 設定が完了しました。
+      {{ 'GDM を再起動して設定を反映します。' if steamlink_restart_gdm | bool else
+      '反映するにはログアウトして再ログインするか、サーバーを再起動してください。' }}

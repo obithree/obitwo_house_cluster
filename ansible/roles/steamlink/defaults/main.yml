@@ -1,0 +1,46 @@
+---
+# Steam Link ホストに使用するログインユーザー。
+steamlink_user: "{{ ansible_user | default('obitwo') }}"
+
+# Ubuntu の GDM で Wayland を無効にして Xorg を既定セッションにする。
+steamlink_gdm_config_path: /etc/gdm3/custom.conf
+steamlink_gdm_service: gdm3
+# Ubuntu 25.10以降のGNOMEはXorgセッションを提供しないため、Xfceを使用する。
+steamlink_requires_alternative_xsession: >-
+  {{ ansible_facts['distribution_version'] is version('25.10', '>=') }}
+steamlink_xsession: >-
+  {{ 'xfce' if steamlink_requires_alternative_xsession | bool else 'ubuntu-xorg' }}
+steamlink_session_type: x11
+steamlink_gdm_default_session: "{{ steamlink_xsession }}.desktop"
+steamlink_xsession_packages: >-
+  {{ ['xfce4'] if steamlink_requires_alternative_xsession | bool else ['ubuntu-session'] }}
+
+# Steam の画面共有に必要な X11 / D-Bus のクライアント環境。
+steamlink_x11_packages:
+  - xserver-xorg
+  - x11-xserver-utils
+  - dbus-x11
+
+# パススルーした AMD GPU を Xorg のプライマリGPUとして使用する。
+# モニターまたはダミープラグをGPUへ接続した状態で有効にすること。
+steamlink_configure_primary_gpu: true
+steamlink_primary_gpu_driver: amdgpu
+steamlink_primary_gpu_config_path: /etc/X11/xorg.conf.d/10-steamlink-primary-gpu.conf
+
+# Ubuntu のネイティブパッケージから Steam Installer をインストールする。
+steamlink_install_steam: true
+steamlink_steam_package: steam-installer
+
+# X11ログイン時にSteam Big Pictureを自動起動する。
+# CEFのGPU描画だけを無効化し、ゲーム描画とVAAPI/NVENCエンコードは無効化しない。
+steamlink_autostart_big_picture: true
+steamlink_disable_steam_cef_gpu: true
+steamlink_steam_launch_options: >-
+  {{ (['-cef-disable-gpu'] if steamlink_disable_steam_cef_gpu | bool else []) + ['-bigpicture'] }}
+
+# true にすると role 実行の最後に GDM を再起動する。
+# 接続中の GUI セッションが終了するため、既定では false。
+steamlink_restart_gdm: false
+
+# true にするとユーザーごとの既定セッションも X11 に固定する。
+steamlink_set_user_xsession: true

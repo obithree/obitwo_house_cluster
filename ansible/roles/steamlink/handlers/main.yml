@@ -1,0 +1,7 @@
+---
+- name: restart gdm
+  ansible.builtin.systemd:
+    name: "{{ steamlink_gdm_service }}"
+    state: restarted
+  become: true
+  when: steamlink_restart_gdm | bool
